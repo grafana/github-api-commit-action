@@ -1,11 +1,14 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'GitHub API commit'
+description: 'Commits changes to your repository via the GitHub API instead of git commands'
+author: 'Grafana'
 inputs:
-  milliseconds: # change this
+  token:
     required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+    description: 'GitHub access token'
+  stage-all-files:
+    required: true
+    description: 'Whether to additionally stage all changed files in the repo prior to committing'
+    default: 'false'
 runs:
   using: 'node16'
   main: 'dist/index.js'

@@ -1,5 +1,5 @@
 {
-  "name": "typescript-action",
+  "name": "github-api-commit-action",
   "version": "0.0.0",
   "private": true,
   "description": "TypeScript template action",
@@ -22,10 +22,12 @@
     "node",
     "setup"
   ],
-  "author": "",
+  "author": "Grafana",
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.10.0"
+    "@actions/core": "^1.10.0",
+    "@actions/exec": "^1.1.1",
+    "@actions/github": "^5.1.1"
   },
   "devDependencies": {
     "@types/node": "^18.15.13",
