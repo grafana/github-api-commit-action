@@ -31,7 +31,6 @@ async function run(): Promise<void> {
     const octokit = github.getOctokit(token)
     const context = github.context
 
-    await exec.exec('realpath', ['./package.json'])
     // Get the root directory for the repository
     const rootDir = await getExecOutput('git', ['rev-parse', '--show-toplevel'])
 
@@ -67,6 +66,7 @@ async function run(): Promise<void> {
     // Generate the tree
     const tree: Tree = await Promise.all(
       diff.map(async _file => {
+        await exec.exec('realpath', [_file])
         // Get the current file mode to preserve it
         const fileMode = await getExecOutput('stat', [
           '--format',

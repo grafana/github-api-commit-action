@@ -63,7 +63,6 @@ function run() {
             const token = core.getInput('token');
             const octokit = github.getOctokit(token);
             const context = github.context;
-            yield exec.exec('realpath', ['./package.json']);
             // Get the root directory for the repository
             const rootDir = yield getExecOutput('git', ['rev-parse', '--show-toplevel']);
             // Get the full ref for the branch we have checked out
@@ -90,6 +89,7 @@ function run() {
                 .filter(f => f !== '');
             // Generate the tree
             const tree = yield Promise.all(diff.map((_file) => __awaiter(this, void 0, void 0, function* () {
+                yield exec.exec('realpath', [_file]);
                 // Get the current file mode to preserve it
                 const fileMode = yield getExecOutput('stat', [
                     '--format',
