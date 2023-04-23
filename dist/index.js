@@ -94,7 +94,7 @@ function run() {
                 const fileMode = yield getExecOutput('stat', [
                     '--format',
                     '"%a"',
-                    path_1.default.join(rootDir, _file)
+                    path_1.default.resolve(rootDir, _file)
                 ]);
                 // We only fetched files with our diff so we can safely assume one of the blob types
                 const mode = Number(fileMode) > 700 ? '100755' : '100644';
@@ -102,7 +102,7 @@ function run() {
                     path: _file,
                     mode,
                     type: 'blob',
-                    content: fs_1.default.readFileSync(path_1.default.join(rootDir, _file), {
+                    content: fs_1.default.readFileSync(path_1.default.resolve(rootDir, _file), {
                         encoding: 'utf-8'
                     })
                 };

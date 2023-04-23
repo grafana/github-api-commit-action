@@ -71,7 +71,7 @@ async function run(): Promise<void> {
         const fileMode = await getExecOutput('stat', [
           '--format',
           '"%a"',
-          path.join(rootDir, _file)
+          path.resolve(rootDir, _file)
         ])
 
         // We only fetched files with our diff so we can safely assume one of the blob types
@@ -81,7 +81,7 @@ async function run(): Promise<void> {
           path: _file,
           mode,
           type: 'blob',
-          content: fs.readFileSync(path.join(rootDir, _file), {
+          content: fs.readFileSync(path.resolve(rootDir, _file), {
             encoding: 'utf-8'
           })
         }
