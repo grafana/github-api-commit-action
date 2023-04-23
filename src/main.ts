@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import exec, {ExecOptions} from '@actions/exec'
-import github from '@actions/github'
+import * as github from '@actions/github'
 import fs from 'fs'
 import path from 'path'
 import {Tree} from './types'

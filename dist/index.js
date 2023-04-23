@@ -44,7 +44,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const exec_1 = __importDefault(__nccwpck_require__(1514));
-const github_1 = __importDefault(__nccwpck_require__(5438));
+const github = __importStar(__nccwpck_require__(5438));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const path_1 = __importDefault(__nccwpck_require__(1017));
 function getExecOutput(command, args, options) {
@@ -61,8 +61,8 @@ function run() {
         try {
             const stageAllFiles = core.getInput('stage-all-files');
             const token = core.getInput('token');
-            const octokit = github_1.default.getOctokit(token);
-            const context = github_1.default.context;
+            const octokit = github.getOctokit(token);
+            const context = github.context;
             // Get the root directory for the repository
             const rootDir = yield getExecOutput('git', ['rev-parse', '--show-toplevel']);
             // Get the full ref for the branch we have checked out
