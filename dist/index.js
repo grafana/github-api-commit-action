@@ -43,13 +43,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
-const exec_1 = __importDefault(__nccwpck_require__(1514));
+const exec = __importStar(__nccwpck_require__(1514));
 const github = __importStar(__nccwpck_require__(5438));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const path_1 = __importDefault(__nccwpck_require__(1017));
 function getExecOutput(command, args, options) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { stdout, stderr, exitCode } = yield exec_1.default.getExecOutput(command, args, options);
+        const { stdout, stderr, exitCode } = yield exec.getExecOutput(command, args, options);
         if (exitCode) {
             throw new Error(stderr);
         }
@@ -70,7 +70,7 @@ function run() {
             // We need the latest commit hash to use as our base tree
             const latestSha = yield getExecOutput('git', ['rev-parse', 'HEAD']);
             if (stageAllFiles === 'true') {
-                const stageExitCode = yield exec_1.default.exec('git', ['add', '.'], { cwd: rootDir });
+                const stageExitCode = yield exec.exec('git', ['add', '.'], { cwd: rootDir });
                 if (stageExitCode) {
                     throw new Error('Failure to stage files using "git add ."');
                 }
