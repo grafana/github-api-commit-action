@@ -2,6 +2,10 @@ name: 'GitHub API commit'
 description: 'Commits changes to your repository via the GitHub API instead of git commands'
 author: 'Grafana'
 inputs:
+  commit-message:
+    required: true
+    description: 'The commit message'
+    default: 'Commit made by GitHub API commit action'
   token:
     required: true
     description: 'GitHub access token'
