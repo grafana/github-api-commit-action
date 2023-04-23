@@ -63,6 +63,7 @@ function run() {
             const token = core.getInput('token');
             const octokit = github.getOctokit(token);
             const context = github.context;
+            yield exec.exec('pwd');
             // Get the root directory for the repository
             const rootDir = yield getExecOutput('git', ['rev-parse', '--show-toplevel']);
             // Get the full ref for the branch we have checked out

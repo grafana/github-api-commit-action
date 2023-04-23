@@ -31,6 +31,7 @@ async function run(): Promise<void> {
     const octokit = github.getOctokit(token)
     const context = github.context
 
+    await exec.exec('pwd')
     // Get the root directory for the repository
     const rootDir = await getExecOutput('git', ['rev-parse', '--show-toplevel'])
 
