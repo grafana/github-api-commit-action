@@ -33,6 +33,7 @@ async function run(): Promise<void> {
 
     // Get the root directory for the repository
     const rootDir = await getExecOutput('git', ['rev-parse', '--show-toplevel'])
+    await exec.exec('cd', [rootDir])
 
     // Get the full ref for the branch we have checked out
     const ref = (
@@ -43,18 +44,19 @@ async function run(): Promise<void> {
     const latestSha = await getExecOutput('git', ['rev-parse', 'HEAD'])
 
     if (stageAllFiles === 'true') {
-      const stageExitCode = await exec.exec('git', ['add', '.'], {cwd: rootDir})
+      const stageExitCode = await exec.exec('git', ['add', '.'])
       if (stageExitCode) {
         throw new Error('Failure to stage files using "git add ."')
       }
     }
 
     // Get only staged files
-    const diffString = await getExecOutput(
-      'git',
-      ['diff', '--staged', '--name-only', 'HEAD'],
-      {cwd: rootDir}
-    )
+    const diffString = await getExecOutput('git', [
+      'diff',
+      '--staged',
+      '--name-only',
+      'HEAD'
+    ])
 
     // Split the output into an array of files
     const diff = diffString

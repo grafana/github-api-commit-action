@@ -65,18 +65,24 @@ function run() {
             const context = github.context;
             // Get the root directory for the repository
             const rootDir = yield getExecOutput('git', ['rev-parse', '--show-toplevel']);
+            yield exec.exec('cd', [rootDir]);
             // Get the full ref for the branch we have checked out
             const ref = (yield getExecOutput('git', ['rev-parse', '--symbolic-full-name', 'HEAD'])).replace(/^refs\//, '');
             // We need the latest commit hash to use as our base tree
             const latestSha = yield getExecOutput('git', ['rev-parse', 'HEAD']);
             if (stageAllFiles === 'true') {
-                const stageExitCode = yield exec.exec('git', ['add', '.'], { cwd: rootDir });
+                const stageExitCode = yield exec.exec('git', ['add', '.']);
                 if (stageExitCode) {
                     throw new Error('Failure to stage files using "git add ."');
                 }
             }
             // Get only staged files
-            const diffString = yield getExecOutput('git', ['diff', '--staged', '--name-only', 'HEAD'], { cwd: rootDir });
+            const diffString = yield getExecOutput('git', [
+                'diff',
+                '--staged',
+                '--name-only',
+                'HEAD'
+            ]);
             // Split the output into an array of files
             const diff = diffString
                 .split('\n')
