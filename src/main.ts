@@ -33,7 +33,6 @@ async function run(): Promise<void> {
 
     // Get the root directory for the repository
     const rootDir = await getExecOutput('git', ['rev-parse', '--show-toplevel'])
-    await exec.exec('cd', [rootDir])
 
     // Get the full ref for the branch we have checked out
     const ref = (

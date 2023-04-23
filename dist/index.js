@@ -65,7 +65,6 @@ function run() {
             const context = github.context;
             // Get the root directory for the repository
             const rootDir = yield getExecOutput('git', ['rev-parse', '--show-toplevel']);
-            yield exec.exec('cd', [rootDir]);
             // Get the full ref for the branch we have checked out
             const ref = (yield getExecOutput('git', ['rev-parse', '--symbolic-full-name', 'HEAD'])).replace(/^refs\//, '');
             // We need the latest commit hash to use as our base tree
