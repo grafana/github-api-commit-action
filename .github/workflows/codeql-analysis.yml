@@ -22,6 +22,8 @@ on:
 
 jobs:
   analyze:
+    # Disable job since we don't have advanced security. Re-enable once repo is public
+    if: false
     name: Analyze
     runs-on: ubuntu-latest
     permissions:
