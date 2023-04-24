@@ -46,7 +46,6 @@ const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
 const github = __importStar(__nccwpck_require__(5438));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
-const path_1 = __importDefault(__nccwpck_require__(1017));
 function getExecOutput(command, args, options) {
     return __awaiter(this, void 0, void 0, function* () {
         const { stdout, stderr, exitCode } = yield exec.getExecOutput(command, args, options);
@@ -64,7 +63,7 @@ function run() {
             const octokit = github.getOctokit(token);
             const context = github.context;
             // Get the root directory for the repository
-            const rootDir = yield getExecOutput('git', ['rev-parse', '--show-toplevel']);
+            // const rootDir = await getExecOutput('git', ['rev-parse', '--show-toplevel'])
             // Get the full ref for the branch we have checked out
             const ref = (yield getExecOutput('git', ['rev-parse', '--symbolic-full-name', 'HEAD'])).replace(/^refs\//, '');
             // We need the latest commit hash to use as our base tree
@@ -94,7 +93,7 @@ function run() {
                 const fileMode = yield getExecOutput('stat', [
                     '--format',
                     '"%a"',
-                    path_1.default.resolve(rootDir, _file)
+                    _file
                 ]);
                 // We only fetched files with our diff so we can safely assume one of the blob types
                 const mode = Number(fileMode) > 700 ? '100755' : '100644';
@@ -102,7 +101,7 @@ function run() {
                     path: _file,
                     mode,
                     type: 'blob',
-                    content: fs_1.default.readFileSync(path_1.default.resolve(rootDir, _file), {
+                    content: fs_1.default.readFileSync(_file, {
                         encoding: 'utf-8'
                     })
                 };

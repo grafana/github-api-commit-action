@@ -32,7 +32,7 @@ async function run(): Promise<void> {
     const context = github.context
 
     // Get the root directory for the repository
-    const rootDir = await getExecOutput('git', ['rev-parse', '--show-toplevel'])
+    // const rootDir = await getExecOutput('git', ['rev-parse', '--show-toplevel'])
 
     // Get the full ref for the branch we have checked out
     const ref = (
@@ -71,7 +71,7 @@ async function run(): Promise<void> {
         const fileMode = await getExecOutput('stat', [
           '--format',
           '"%a"',
-          path.resolve(rootDir, _file)
+          _file
         ])
 
         // We only fetched files with our diff so we can safely assume one of the blob types
@@ -81,7 +81,7 @@ async function run(): Promise<void> {
           path: _file,
           mode,
           type: 'blob',
-          content: fs.readFileSync(path.resolve(rootDir, _file), {
+          content: fs.readFileSync(_file, {
             encoding: 'utf-8'
           })
         }
