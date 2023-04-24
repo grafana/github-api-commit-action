@@ -57,8 +57,12 @@ async function run(): Promise<void> {
       ])
     ).replace(/^refs\//, '')
 
+    core.info(`Committing to: ${ref}`)
+
     // We need the latest commit hash to use as our base tree
     const latestSha = await getTrimmedOutput('git', ['rev-parse', 'HEAD'])
+
+    core.info(`Latest commit hash: ${latestSha}`)
 
     if (stageAllFiles === 'true') {
       const stageExitCode = await exec.exec('git', ['add', '.'], {cwd: rootDir})
@@ -74,18 +78,9 @@ async function run(): Promise<void> {
       {cwd: rootDir}
     )
 
-    core.debug(
-      JSON.stringify(
-        {diff, latestSha, ref, repo: context.repo, stageAllFiles},
-        null,
-        2
-      )
-    )
-
     // Generate the tree
     const tree: Tree = await Promise.all(
       diff.map(async _file => {
-        await exec.exec('realpath', [_file])
         // Get the current file mode to preserve it
         const fileMode = await getTrimmedOutput('stat', [
           '--format',
@@ -113,7 +108,10 @@ async function run(): Promise<void> {
       tree
     }
 
-    core.debug(JSON.stringify(createTreePayload, null, 2))
+    core.debug(
+      `Create tree payload:\n ${JSON.stringify(createTreePayload, null, 2)}`
+    )
+
     // 1. Create the new tree
     const treeSha = (await octokit.rest.git.createTree(createTreePayload)).data
       .sha
@@ -124,6 +122,10 @@ async function run(): Promise<void> {
       parents: [latestSha],
       tree: treeSha
     }
+
+    core.debug(
+      `Create commit payload:\n ${JSON.stringify(createCommitPayload, null, 2)}`
+    )
 
     // 2. Create the commit
     const createdCommitSha = (
@@ -137,7 +139,28 @@ async function run(): Promise<void> {
       sha: createdCommitSha
     }
 
+    core.debug(
+      `Update ref payload:\n ${JSON.stringify(updateRefPayload, null, 2)}`
+    )
+
     await octokit.rest.git.updateRef(updateRefPayload)
+
+    core.info('Resetting local file changes to pull new commit')
+    await exec.exec('git', ['reset', '--hard', 'HEAD'])
+
+    core.info('Pulling latest commit')
+    await exec.exec('git', ['pull'])
+
+    core.info(
+      JSON.stringify(
+        {'commit-sha': createdCommitSha, 'committed-files': diff},
+        null,
+        2
+      )
+    )
+
+    core.setOutput('commit-sha', createdCommitSha)
+    core.setOutput('committed-files', JSON.stringify(diff))
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }

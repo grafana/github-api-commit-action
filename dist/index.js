@@ -82,8 +82,10 @@ function run() {
                 '--symbolic-full-name',
                 'HEAD'
             ])).replace(/^refs\//, '');
+            core.info(`Committing to: ${ref}`);
             // We need the latest commit hash to use as our base tree
             const latestSha = yield getTrimmedOutput('git', ['rev-parse', 'HEAD']);
+            core.info(`Latest commit hash: ${latestSha}`);
             if (stageAllFiles === 'true') {
                 const stageExitCode = yield exec.exec('git', ['add', '.'], { cwd: rootDir });
                 if (stageExitCode) {
@@ -92,10 +94,8 @@ function run() {
             }
             // Get only staged files
             const diff = yield getTrimmedOutputArray('git', ['diff', '--staged', '--name-only', 'HEAD'], { cwd: rootDir });
-            core.debug(JSON.stringify({ diff, latestSha, ref, repo: context.repo, stageAllFiles }, null, 2));
             // Generate the tree
             const tree = yield Promise.all(diff.map((_file) => __awaiter(this, void 0, void 0, function* () {
-                yield exec.exec('realpath', [_file]);
                 // Get the current file mode to preserve it
                 const fileMode = yield getTrimmedOutput('stat', [
                     '--format',
@@ -114,16 +114,25 @@ function run() {
                 };
             })));
             const createTreePayload = Object.assign(Object.assign({}, context.repo), { base_tree: latestSha, tree });
-            core.debug(JSON.stringify(createTreePayload, null, 2));
+            core.debug(`Create tree payload:\n ${JSON.stringify(createTreePayload, null, 2)}`);
             // 1. Create the new tree
             const treeSha = (yield octokit.rest.git.createTree(createTreePayload)).data
                 .sha;
             const createCommitPayload = Object.assign(Object.assign({}, context.repo), { message: core.getInput('commit-message'), parents: [latestSha], tree: treeSha });
+            core.debug(`Create commit payload:\n ${JSON.stringify(createCommitPayload, null, 2)}`);
             // 2. Create the commit
             const createdCommitSha = (yield octokit.rest.git.createCommit(createCommitPayload)).data.sha;
             // 3. Update the reference to the new sha
             const updateRefPayload = Object.assign(Object.assign({}, context.repo), { ref, sha: createdCommitSha });
+            core.debug(`Update ref payload:\n ${JSON.stringify(updateRefPayload, null, 2)}`);
             yield octokit.rest.git.updateRef(updateRefPayload);
+            core.info('Resetting local file changes to pull new commit');
+            yield exec.exec('git', ['reset', '--hard', 'HEAD']);
+            core.info('Pulling latest commit');
+            yield exec.exec('git', ['pull']);
+            core.info(JSON.stringify({ 'commit-sha': createdCommitSha, 'committed-files': diff }, null, 2));
+            core.setOutput('commit-sha', createdCommitSha);
+            core.setOutput('committed-files', JSON.stringify(diff));
         }
         catch (error) {
             if (error instanceof Error)

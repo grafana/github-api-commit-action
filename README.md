@@ -1,6 +1,20 @@
 <p align="center">
-  <a href="https://github.com/actions/typescript-action/actions"><img alt="typescript-action status" src="https://github.com/actions/typescript-action/workflows/build-test/badge.svg"></a>
+  <a href="https://github.com/grafana/github-api-commit-action/actions"><img alt="typescript-action status" src="https://github.com/grafana/github-api-commit-action/workflows/build-test/badge.svg"></a>
 </p>
+
+# GitHub Api Commit
+
+Committing in your workflow can normally be done using git commands or other actions that perform commits for you. However,
+if you are using a GitHub App installation token and your repository requires commit signing, there is no way to attach a
+signing key to your commit and it must be done through the GitHub api.
+
+The general steps of doing so are
+
+1. [Create a tree](https://docs.github.com/en/rest/git/trees?apiVersion=2022-11-28#create-a-tree)
+2. [Create a commit](https://docs.github.com/en/rest/git/commits?apiVersion=2022-11-28#create-a-commit)
+3. [Update the head reference](https://docs.github.com/en/rest/git/refs?apiVersion=2022-11-28#update-a-reference)
+
+An example can be found [here](https://github.com/orgs/community/discussions/50055)
 
 # Create a JavaScript Action using TypeScript
 
