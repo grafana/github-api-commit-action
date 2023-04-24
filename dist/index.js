@@ -86,6 +86,7 @@ function run() {
                 .split('\n')
                 .map(f => f.trim())
                 .filter(f => f !== '');
+            core.debug(JSON.stringify({ diff, latestSha, ref, repo: context.repo, stageAllFiles }, null, 2));
             // Generate the tree
             const tree = yield Promise.all(diff.map((_file) => __awaiter(this, void 0, void 0, function* () {
                 yield exec.exec('realpath', [_file]);
@@ -107,6 +108,7 @@ function run() {
                 };
             })));
             const createTreePayload = Object.assign(Object.assign({}, context.repo), { base_tree: latestSha, tree });
+            core.debug(JSON.stringify(createTreePayload, null, 2));
             // 1. Create the new tree
             const treeSha = (yield octokit.rest.git.createTree(createTreePayload)).data
                 .sha;

@@ -63,6 +63,14 @@ async function run(): Promise<void> {
       .map(f => f.trim())
       .filter(f => f !== '')
 
+    core.debug(
+      JSON.stringify(
+        {diff, latestSha, ref, repo: context.repo, stageAllFiles},
+        null,
+        2
+      )
+    )
+
     // Generate the tree
     const tree: Tree = await Promise.all(
       diff.map(async _file => {
@@ -94,6 +102,7 @@ async function run(): Promise<void> {
       tree
     }
 
+    core.debug(JSON.stringify(createTreePayload, null, 2))
     // 1. Create the new tree
     const treeSha = (await octokit.rest.git.createTree(createTreePayload)).data
       .sha
