@@ -1,0 +1,48 @@
+name: Update Changelog
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [closed]
+jobs:
+  update_changelog:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true # Only run when the PR was merged. The 'closed' state also includes closed but not merged PRs
+    steps:
+      - uses: tibdex/github-app-token@v1
+        id: get_installation_token
+        with:
+          app_id: ${{ secrets.GH_APP_ID }}
+          installation_id: ${{ secrets.GH_APP_INSTALLATION_ID }}
+          private_key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v3
+        with:
+          # We want to update our changelog on main
+          ref: 'main'
+          token: ${{ steps.get_installation_token.outputs.token }}
+
+      - name: Install utilities
+        run: sudo apt-get install jq
+
+      - name: Get PR information
+        id: pr
+        uses: octokit/request-action@v2.x
+        with:
+          route: GET /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}
+        env:
+          GITHUB_TOKEN: ${{ steps.get_installation_token.outputs.token }}
+
+      - name: Update Changelog
+        run: |
+          PR_DATA='${{ steps.pr.outputs.data }}'
+          PR_LINE=$(echo $PR_DATA | jq -r '"- \(.title) ([#\(.number)](\(.html_url))) - [@\(.user.login)](\(.user.html_url)) - \(.merged_at | if . == null then "" else . | fromdateiso8601 | strftime("%Y-%m-%d") end)"')
+          sed -i "/## Unreleased/ a $PR_LINE" CHANGELOG.md
+          git add CHANGELOG.md
+
+      - name: Commit changes
+        uses: grafana/github-api-commit-action@v1.0.0-1
+        with:
+          token: ${{ steps.get_installation_token.outputs.token }}
+          commit-message: '[BOT] Update changelog'

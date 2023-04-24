@@ -5,14 +5,19 @@ inputs:
   commit-message:
     required: true
     description: 'The commit message'
-    default: 'Commit made by GitHub API commit action'
-  token:
-    required: true
-    description: 'GitHub access token'
+    default: 'Commit performed by grafana/github-api-commit-action'
   stage-all-files:
     required: true
     description: 'Whether to additionally stage all changed files in the repo prior to committing'
     default: 'false'
+  token:
+    required: true
+    description: 'GitHub access token'
+outputs:
+  commit-sha:
+    description: 'The commit hash of the new commit'
+  committed-files:
+    description: 'Array of the files that were committed'
 runs:
   using: 'node16'
   main: 'dist/index.js'
