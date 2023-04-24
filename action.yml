@@ -5,7 +5,7 @@ inputs:
   commit-message:
     required: true
     description: 'The commit message'
-    default: 'Commit made by GitHub API commit action'
+    default: 'Commit performed by grafana/github-api-commit-action'
   stage-all-files:
     required: true
     description: 'Whether to additionally stage all changed files in the repo prior to committing'

@@ -10,12 +10,20 @@ jobs:
   build: # make sure build/ci work properly
     runs-on: ubuntu-latest
     steps:
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: lts/gallium
       - uses: actions/checkout@v3
-      - run: npm install
-      - run: npm run all
+      - run: yarn install --immutable
+      - run: yarn all
   test: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: lts/gallium
       - uses: tibdex/github-app-token@v1
         id: get_installation_token
         with:

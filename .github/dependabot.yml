@@ -5,7 +5,7 @@ updates:
     schedule:
       interval: daily
 
-  - package-ecosystem: npm
+  - package-ecosystem: npm # This is the correct value for yarn https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#package-ecosystem
     directory: /
     schedule:
       interval: daily
