@@ -46,13 +46,22 @@ const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
 const github = __importStar(__nccwpck_require__(5438));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
-function getExecOutput(command, args, options) {
+const path_1 = __importDefault(__nccwpck_require__(1017));
+function getTrimmedOutput(command, args, options) {
     return __awaiter(this, void 0, void 0, function* () {
         const { stdout, stderr, exitCode } = yield exec.getExecOutput(command, args, options);
         if (exitCode) {
             throw new Error(stderr);
         }
-        return stdout;
+        return stdout.trim();
+    });
+}
+function getTrimmedOutputArray(command, args, options) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return (yield getTrimmedOutput(command, args, options))
+            .split('\n')
+            .map(f => f.trim())
+            .filter(f => f !== '');
     });
 }
 function run() {
@@ -63,38 +72,35 @@ function run() {
             const octokit = github.getOctokit(token);
             const context = github.context;
             // Get the root directory for the repository
-            // const rootDir = await getExecOutput('git', ['rev-parse', '--show-toplevel'])
+            const rootDir = yield getTrimmedOutput('git', [
+                'rev-parse',
+                '--show-toplevel'
+            ]);
             // Get the full ref for the branch we have checked out
-            const ref = (yield getExecOutput('git', ['rev-parse', '--symbolic-full-name', 'HEAD'])).replace(/^refs\//, '');
+            const ref = (yield getTrimmedOutput('git', [
+                'rev-parse',
+                '--symbolic-full-name',
+                'HEAD'
+            ])).replace(/^refs\//, '');
             // We need the latest commit hash to use as our base tree
-            const latestSha = yield getExecOutput('git', ['rev-parse', 'HEAD']);
+            const latestSha = yield getTrimmedOutput('git', ['rev-parse', 'HEAD']);
             if (stageAllFiles === 'true') {
-                const stageExitCode = yield exec.exec('git', ['add', '.']);
+                const stageExitCode = yield exec.exec('git', ['add', '.'], { cwd: rootDir });
                 if (stageExitCode) {
                     throw new Error('Failure to stage files using "git add ."');
                 }
             }
             // Get only staged files
-            const diffString = yield getExecOutput('git', [
-                'diff',
-                '--staged',
-                '--name-only',
-                'HEAD'
-            ]);
-            // Split the output into an array of files
-            const diff = diffString
-                .split('\n')
-                .map(f => f.trim())
-                .filter(f => f !== '');
+            const diff = yield getTrimmedOutputArray('git', ['diff', '--staged', '--name-only', 'HEAD'], { cwd: rootDir });
             core.debug(JSON.stringify({ diff, latestSha, ref, repo: context.repo, stageAllFiles }, null, 2));
             // Generate the tree
             const tree = yield Promise.all(diff.map((_file) => __awaiter(this, void 0, void 0, function* () {
                 yield exec.exec('realpath', [_file]);
                 // Get the current file mode to preserve it
-                const fileMode = yield getExecOutput('stat', [
+                const fileMode = yield getTrimmedOutput('stat', [
                     '--format',
                     '"%a"',
-                    _file
+                    path_1.default.resolve(rootDir, _file)
                 ]);
                 // We only fetched files with our diff so we can safely assume one of the blob types
                 const mode = Number(fileMode) > 700 ? '100755' : '100644';
@@ -102,7 +108,7 @@ function run() {
                     path: _file,
                     mode,
                     type: 'blob',
-                    content: fs_1.default.readFileSync(_file, {
+                    content: fs_1.default.readFileSync(path_1.default.resolve(rootDir, _file), {
                         encoding: 'utf-8'
                     })
                 };

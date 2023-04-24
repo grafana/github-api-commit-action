@@ -6,7 +6,7 @@ import fs from 'fs'
 import path from 'path'
 import {Tree} from './types'
 
-async function getExecOutput(
+async function getTrimmedOutput(
   command: string,
   args?: string[],
   options?: ExecOptions
@@ -21,7 +21,18 @@ async function getExecOutput(
     throw new Error(stderr)
   }
 
-  return stdout
+  return stdout.trim()
+}
+
+async function getTrimmedOutputArray(
+  command: string,
+  args?: string[],
+  options?: ExecOptions
+): Promise<string[]> {
+  return (await getTrimmedOutput(command, args, options))
+    .split('\n')
+    .map(f => f.trim())
+    .filter(f => f !== '')
 }
 
 async function run(): Promise<void> {
@@ -32,36 +43,36 @@ async function run(): Promise<void> {
     const context = github.context
 
     // Get the root directory for the repository
-    // const rootDir = await getExecOutput('git', ['rev-parse', '--show-toplevel'])
+    const rootDir = await getTrimmedOutput('git', [
+      'rev-parse',
+      '--show-toplevel'
+    ])
 
     // Get the full ref for the branch we have checked out
     const ref = (
-      await getExecOutput('git', ['rev-parse', '--symbolic-full-name', 'HEAD'])
+      await getTrimmedOutput('git', [
+        'rev-parse',
+        '--symbolic-full-name',
+        'HEAD'
+      ])
     ).replace(/^refs\//, '')
 
     // We need the latest commit hash to use as our base tree
-    const latestSha = await getExecOutput('git', ['rev-parse', 'HEAD'])
+    const latestSha = await getTrimmedOutput('git', ['rev-parse', 'HEAD'])
 
     if (stageAllFiles === 'true') {
-      const stageExitCode = await exec.exec('git', ['add', '.'])
+      const stageExitCode = await exec.exec('git', ['add', '.'], {cwd: rootDir})
       if (stageExitCode) {
         throw new Error('Failure to stage files using "git add ."')
       }
     }
 
     // Get only staged files
-    const diffString = await getExecOutput('git', [
-      'diff',
-      '--staged',
-      '--name-only',
-      'HEAD'
-    ])
-
-    // Split the output into an array of files
-    const diff = diffString
-      .split('\n')
-      .map(f => f.trim())
-      .filter(f => f !== '')
+    const diff = await getTrimmedOutputArray(
+      'git',
+      ['diff', '--staged', '--name-only', 'HEAD'],
+      {cwd: rootDir}
+    )
 
     core.debug(
       JSON.stringify(
@@ -76,10 +87,10 @@ async function run(): Promise<void> {
       diff.map(async _file => {
         await exec.exec('realpath', [_file])
         // Get the current file mode to preserve it
-        const fileMode = await getExecOutput('stat', [
+        const fileMode = await getTrimmedOutput('stat', [
           '--format',
           '"%a"',
-          _file
+          path.resolve(rootDir, _file)
         ])
 
         // We only fetched files with our diff so we can safely assume one of the blob types
@@ -89,7 +100,7 @@ async function run(): Promise<void> {
           path: _file,
           mode,
           type: 'blob',
-          content: fs.readFileSync(_file, {
+          content: fs.readFileSync(path.resolve(rootDir, _file), {
             encoding: 'utf-8'
           })
         }
