@@ -42,7 +42,7 @@ jobs:
           git add CHANGELOG.md
 
       - name: Commit changes
-        uses: grafana/github-api-commit-action@v1.0.0-1
+        uses: grafana/github-api-commit-action@v0
         with:
           token: ${{ steps.get_installation_token.outputs.token }}
           commit-message: '[BOT] Update changelog'

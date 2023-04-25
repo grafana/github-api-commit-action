@@ -23,7 +23,7 @@ commit signing for you.
 
 ```yaml
   - name: Commit changes
-    uses: grafana/github-api-commit-action@v1
+    uses: grafana/github-api-commit-action@v0.1.0
     with:
       token: ${{ github.token }} # Token you want to authenticate with
       commit-message: "<commit-message>" # Commit message defaults to "Commit performed by grafana/github-api-commit-action"
@@ -41,7 +41,7 @@ Example how to use GitHub app installation token
       private_key: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
 
   - name: Commit changes
-    uses: grafana/github-api-commit-action@v1
+    uses: grafana/github-api-commit-action@v0.1.0
     with:
       token: ${{ steps.get_installation_token.outputs.token }} # Token you want to authenticate with
       commit-message: "<commit-message>" # Commit message defaults to "Commit performed by grafana/github-api-commit-action"
