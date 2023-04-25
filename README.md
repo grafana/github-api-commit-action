@@ -4,9 +4,9 @@
 
 # GitHub Api Commit
 
-Committing in your workflow can normally be done using git commands or other actions that perform commits for you. However,
-if you are using a GitHub App installation token and your repository requires commit signing, there is no way to attach a
-signing key to your commit and it must be done through the GitHub api.
+Committing in your workflow can normally be done using git commands or other actions that perform commits for you.
+However, if you are using a GitHub App installation token and your repository requires commit signing, there is no way
+to attach a signing key to your commit and it must be done through the GitHub api.
 
 The general steps of doing so are
 
@@ -39,7 +39,7 @@ Example how to use GitHub app installation token
       app_id: ${{ secrets.GITHUB_APP_ID }}
       installation_id: ${{ secrets.GITHUB_APP_INSTALLATION_ID }}
       private_key: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
-      
+
   - name: Commit changes
     uses: grafana/github-api-commit-action@v1
     with:
@@ -47,3 +47,9 @@ Example how to use GitHub app installation token
       commit-message: "<commit-message>" # Commit message defaults to "Commit performed by grafana/github-api-commit-action"
       stage-all-files: true | false # Whether to additionally stage any changed files in the checkout. Defaults to false
 ```
+
+## Limitations
+
+- The branch that is checked out needs to be in an attached state. Meaning that you can commit and push to it
+- Currently, the action only supports adding and updating file contents. It doesn't reconstruct the entire tree for
+  commit. Moving files would succeed, but the old file will still remain in its location.

@@ -1,6 +1,6 @@
 {
   "name": "github-api-commit-action",
-  "version": "1.0.0-1",
+  "version": "0.1.0",
   "private": true,
   "description": "Commit changes using the GitHub api",
   "main": "lib/main.js",
@@ -10,7 +10,7 @@
     "format-check": "prettier --check '**/*.ts'",
     "lint": "eslint src/**/*.ts",
     "package": "ncc build --source-map --license licenses.txt",
-    "test": "jest",
+    "test": "jest --verbose",
     "all": "yarn build && yarn format && yarn lint && yarn package && yarn test"
   },
   "repository": {
