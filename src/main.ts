@@ -5,6 +5,7 @@ import * as github from '@actions/github'
 import fs from 'fs'
 import path from 'path'
 import {Tree} from './types'
+import { Context } from '@actions/github/lib/context'
 
 async function getTrimmedOutput(
   command: string,
@@ -35,12 +36,36 @@ async function getTrimmedOutputArray(
     .filter(f => f !== '')
 }
 
+async function getRepoFromCheckout(): Promise<Context["repo"]> {
+  const remoteOriginUrl = await getTrimmedOutput('git', ['remote','get-url','origin'])
+
+  core.debug(`remoteOriginUrl: ${remoteOriginUrl}`)
+
+  const githubRepoRegex = /^(?:https:\/\/github\.com\/|git@github\.com:)([^\/]+)\/([^\/]+?)(?:\.git)?$/;
+
+  const match = remoteOriginUrl.match(githubRepoRegex);
+
+  if(match) {
+    const repo = {
+      owner: match[1],
+      repo: match[2]
+    }
+    core.debug(`repo:\n${JSON.stringify(repo, null, 2)}`)
+    return repo
+  }
+
+  throw new Error('Failure to parse repo from origin URL')
+}
+
 async function run(): Promise<void> {
   try {
     const stageAllFiles = core.getInput('stage-all-files')
     const token = core.getInput('token')
+    const useCheckoutRepo = core.getInput('use-checkout-repo')
+  
     const octokit = github.getOctokit(token)
-    const context = github.context
+
+    const repo = useCheckoutRepo === 'true' ? await getRepoFromCheckout() : github.context.repo
 
     // Get the root directory for the repository
     const rootDir = await getTrimmedOutput('git', [
@@ -103,7 +128,7 @@ async function run(): Promise<void> {
     )
 
     const createTreePayload = {
-      ...context.repo,
+      ...repo,
       base_tree: latestSha,
       tree
     }
@@ -117,7 +142,7 @@ async function run(): Promise<void> {
       .sha
 
     const createCommitPayload = {
-      ...context.repo,
+      ...repo,
       message: core.getInput('commit-message'),
       parents: [latestSha],
       tree: treeSha
@@ -134,7 +159,7 @@ async function run(): Promise<void> {
 
     // 3. Update the reference to the new sha
     const updateRefPayload = {
-      ...context.repo,
+      ...repo,
       ref,
       sha: createdCommitSha
     }
