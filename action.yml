@@ -15,7 +15,7 @@ inputs:
     description: 'GitHub access token'
   use-checkout-repo:
     required: false
-    description: 'Whether to use the repo from the checked out .git directory or default to the action context repo.'
+    description: 'Whether to use the repo from the checked out .git directory. Defaults to false, meaning it will use the action context repo.'
     default: 'false'
 outputs:
   commit-sha:

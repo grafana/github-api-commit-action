@@ -45,4 +45,4 @@ jobs:
         uses: grafana/github-api-commit-action@v0
         with:
           token: ${{ steps.get_installation_token.outputs.token }}
-          commit-message: '[BOT] Update changelog'
+          commit-message: 'chore: update changelog [BOT]'

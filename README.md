@@ -28,6 +28,7 @@ commit signing for you.
       token: ${{ github.token }} # Token you want to authenticate with
       commit-message: "<commit-message>" # Commit message defaults to "Commit performed by grafana/github-api-commit-action"
       stage-all-files: true | false # Whether to additionally stage any changed files in the checkout. Defaults to false
+      use-checkout-repo: true | false # Whether to use the repo from the checked out .git directory. Defaults to false, meaning it will use the action context repo.
 ```
 
 Example how to use GitHub app installation token
@@ -46,6 +47,7 @@ Example how to use GitHub app installation token
       token: ${{ steps.get_installation_token.outputs.token }} # Token you want to authenticate with
       commit-message: "<commit-message>" # Commit message defaults to "Commit performed by grafana/github-api-commit-action"
       stage-all-files: true | false # Whether to additionally stage any changed files in the checkout. Defaults to false
+      use-checkout-repo: true | false # Whether to use the repo from the checked out .git directory. Defaults to false, meaning it will use the action context repo.
 ```
 
 ## Limitations
