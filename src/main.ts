@@ -5,7 +5,7 @@ import * as github from '@actions/github'
 import fs from 'fs'
 import path from 'path'
 import {Tree} from './types'
-import { Context } from '@actions/github/lib/context'
+import {Context} from '@actions/github/lib/context'
 
 async function getTrimmedOutput(
   command: string,
@@ -36,16 +36,21 @@ async function getTrimmedOutputArray(
     .filter(f => f !== '')
 }
 
-async function getRepoFromCheckout(): Promise<Context["repo"]> {
-  const remoteOriginUrl = await getTrimmedOutput('git', ['remote','get-url','origin'])
+async function getRepoFromCheckout(): Promise<Context['repo']> {
+  const remoteOriginUrl = await getTrimmedOutput('git', [
+    'remote',
+    'get-url',
+    'origin'
+  ])
 
   core.debug(`remoteOriginUrl: ${remoteOriginUrl}`)
 
-  const githubRepoRegex = /^(?:https:\/\/github\.com\/|git@github\.com:)([^\/]+)\/([^\/]+?)(?:\.git)?$/;
+  const githubRepoRegex =
+    /^(?:https:\/\/github\.com\/|git@github\.com:)([^/]+)\/([^/]+?)(?:\.git)?$/
 
-  const match = remoteOriginUrl.match(githubRepoRegex);
+  const match = remoteOriginUrl.match(githubRepoRegex)
 
-  if(match) {
+  if (match) {
     const repo = {
       owner: match[1],
       repo: match[2]
@@ -62,10 +67,13 @@ async function run(): Promise<void> {
     const stageAllFiles = core.getInput('stage-all-files')
     const token = core.getInput('token')
     const useCheckoutRepo = core.getInput('use-checkout-repo')
-  
+
     const octokit = github.getOctokit(token)
 
-    const repo = useCheckoutRepo === 'true' ? await getRepoFromCheckout() : github.context.repo
+    const repo =
+      useCheckoutRepo === 'true'
+        ? await getRepoFromCheckout()
+        : github.context.repo
 
     // Get the root directory for the repository
     const rootDir = await getTrimmedOutput('git', [

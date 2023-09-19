@@ -64,13 +64,37 @@ function getTrimmedOutputArray(command, args, options) {
             .filter(f => f !== '');
     });
 }
+function getRepoFromCheckout() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const remoteOriginUrl = yield getTrimmedOutput('git', [
+            'remote',
+            'get-url',
+            'origin'
+        ]);
+        core.debug(`remoteOriginUrl: ${remoteOriginUrl}`);
+        const githubRepoRegex = /^(?:https:\/\/github\.com\/|git@github\.com:)([^/]+)\/([^/]+?)(?:\.git)?$/;
+        const match = remoteOriginUrl.match(githubRepoRegex);
+        if (match) {
+            const repo = {
+                owner: match[1],
+                repo: match[2]
+            };
+            core.debug(`repo:\n${JSON.stringify(repo, null, 2)}`);
+            return repo;
+        }
+        throw new Error('Failure to parse repo from origin URL');
+    });
+}
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const stageAllFiles = core.getInput('stage-all-files');
             const token = core.getInput('token');
+            const useCheckoutRepo = core.getInput('use-checkout-repo');
             const octokit = github.getOctokit(token);
-            const context = github.context;
+            const repo = useCheckoutRepo === 'true'
+                ? yield getRepoFromCheckout()
+                : github.context.repo;
             // Get the root directory for the repository
             const rootDir = yield getTrimmedOutput('git', [
                 'rev-parse',
@@ -113,17 +137,17 @@ function run() {
                     })
                 };
             })));
-            const createTreePayload = Object.assign(Object.assign({}, context.repo), { base_tree: latestSha, tree });
+            const createTreePayload = Object.assign(Object.assign({}, repo), { base_tree: latestSha, tree });
             core.debug(`Create tree payload:\n ${JSON.stringify(createTreePayload, null, 2)}`);
             // 1. Create the new tree
             const treeSha = (yield octokit.rest.git.createTree(createTreePayload)).data
                 .sha;
-            const createCommitPayload = Object.assign(Object.assign({}, context.repo), { message: core.getInput('commit-message'), parents: [latestSha], tree: treeSha });
+            const createCommitPayload = Object.assign(Object.assign({}, repo), { message: core.getInput('commit-message'), parents: [latestSha], tree: treeSha });
             core.debug(`Create commit payload:\n ${JSON.stringify(createCommitPayload, null, 2)}`);
             // 2. Create the commit
             const createdCommitSha = (yield octokit.rest.git.createCommit(createCommitPayload)).data.sha;
             // 3. Update the reference to the new sha
-            const updateRefPayload = Object.assign(Object.assign({}, context.repo), { ref, sha: createdCommitSha });
+            const updateRefPayload = Object.assign(Object.assign({}, repo), { ref, sha: createdCommitSha });
             core.debug(`Update ref payload:\n ${JSON.stringify(updateRefPayload, null, 2)}`);
             yield octokit.rest.git.updateRef(updateRefPayload);
             core.info('Resetting local file changes to pull new commit');
