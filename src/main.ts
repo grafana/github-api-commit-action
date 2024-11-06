@@ -4,7 +4,14 @@ import * as exec from '@actions/exec'
 import * as github from '@actions/github'
 import fs from 'fs'
 import path from 'path'
-import {Tree} from './types'
+import {
+  Mode,
+  Tree,
+  TreeEntry,
+  TreeType,
+  GitFileChangeType,
+  GitFileChange
+} from './types'
 import {Context} from '@actions/github/lib/context'
 
 async function getTrimmedOutput(
@@ -62,6 +69,103 @@ async function getRepoFromCheckout(): Promise<Context['repo']> {
   throw new Error('Failure to parse repo from origin URL')
 }
 
+function fileModeToMode(fileMode: string): Mode {
+  return Number(fileMode) > 700 ? '100755' : '100644'
+}
+
+async function processModifiedFile(
+  rootDir: string,
+  _file: string
+): Promise<TreeEntry> {
+  // Get the current file mode to preserve it
+  const fileMode = await getTrimmedOutput('stat', [
+    '--format',
+    '"%a"',
+    path.resolve(rootDir, _file)
+  ])
+
+  // We only fetched files with our diff so we can safely assume one of the blob types
+  const mode = fileModeToMode(fileMode)
+  const type: TreeType = 'blob'
+
+  const treeEntry = {
+    path: _file,
+    mode: mode,
+    type: type,
+    content: fs.readFileSync(path.resolve(rootDir, _file), {
+      encoding: 'utf-8'
+    })
+  }
+
+  return treeEntry
+}
+
+async function processDeletedFile(_file: string): Promise<TreeEntry> {
+  const mode: Mode = '100644'
+  const type: TreeType = 'blob'
+
+  const treeEntry = {
+    path: _file,
+    mode: mode, // mode should not matter since this file is getting deleted
+    type: type,
+    sha: null
+  }
+
+  return treeEntry
+}
+
+async function processGitFileStatus(entry: string): Promise<GitFileChange> {
+  var entryArr = entry.split(/(\s+)/).filter(e => e.trim().length > 0)
+
+  var changeType = entryArr[0]
+
+  switch (changeType[0]) {
+    case 'M':
+    case 'A':
+      return {
+        action: changeType[0] as GitFileChangeType,
+        old_path: entryArr[1],
+        new_path: entryArr[1]
+      }
+    case 'D':
+      return {
+        action: changeType[0] as GitFileChangeType,
+        old_path: entryArr[1]
+      }
+    case 'R':
+      return {
+        action: changeType[0] as GitFileChangeType,
+        old_path: entryArr[1],
+        new_path: entryArr[2]
+      }
+    default:
+      throw new Error('Failure to parse git diff')
+  }
+}
+
+async function processFileEntry(
+  rootDir: string,
+  entry: GitFileChange
+): Promise<Tree> {
+  switch (entry.action) {
+    case 'M':
+    case 'A':
+      return [await processModifiedFile(rootDir, entry.old_path)]
+    case 'D':
+      return [await processDeletedFile(entry.old_path)]
+    case 'R':
+      if (entry.new_path === undefined) {
+        throw new Error('Invalid file rename entry')
+      }
+      return [
+        await processDeletedFile(entry.old_path),
+        await processModifiedFile(rootDir, entry.new_path)
+      ]
+    default:
+      throw new Error('Failure to parse git diff')
+  }
+}
+
 async function run(): Promise<void> {
   try {
     const stageAllFiles = core.getInput('stage-all-files')
@@ -107,33 +211,22 @@ async function run(): Promise<void> {
     // Get only staged files
     const diff = await getTrimmedOutputArray(
       'git',
-      ['diff', '--staged', '--name-only', 'HEAD'],
+      ['diff', '--staged', '--name-status', 'HEAD'],
       {cwd: rootDir}
     )
 
-    // Generate the tree
-    const tree: Tree = await Promise.all(
-      diff.map(async _file => {
-        // Get the current file mode to preserve it
-        const fileMode = await getTrimmedOutput('stat', [
-          '--format',
-          '"%a"',
-          path.resolve(rootDir, _file)
-        ])
-
-        // We only fetched files with our diff so we can safely assume one of the blob types
-        const mode = Number(fileMode) > 700 ? '100755' : '100644'
-
-        return {
-          path: _file,
-          mode,
-          type: 'blob',
-          content: fs.readFileSync(path.resolve(rootDir, _file), {
-            encoding: 'utf-8'
-          })
-        }
-      })
+    const gitFileChanges = await Promise.all(
+      diff.map(async change => processGitFileStatus(change))
     )
+
+    // Generate the tree
+    const tree: Tree = (
+      await Promise.all(
+        gitFileChanges.map(async change => {
+          return processFileEntry(rootDir, change)
+        })
+      )
+    ).reduce((accumulator, value) => accumulator.concat(value), [])
 
     const createTreePayload = {
       ...repo,
@@ -186,14 +279,14 @@ async function run(): Promise<void> {
 
     core.info(
       JSON.stringify(
-        {'commit-sha': createdCommitSha, 'committed-files': diff},
+        {'commit-sha': createdCommitSha, 'committed-files': gitFileChanges},
         null,
         2
       )
     )
 
     core.setOutput('commit-sha', createdCommitSha)
-    core.setOutput('committed-files', JSON.stringify(diff))
+    core.setOutput('committed-files', JSON.stringify(gitFileChanges))
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
