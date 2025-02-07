@@ -51,27 +51,29 @@ runs:
       run: |
         status_output=$(git status --porcelain=v2 --branch --untracked-files=no)
         
-        echo "$status_output"
-        
         staged_additions=()
         staged_deletions=()
 
+        echo ""
         while IFS= read -r line; do
           if [[ "$line" == 1* ]]; then
             status=$(echo "$line" | awk '{print $2}')
             filepath=$(echo "$line" | awk '{print $NF}')
-        
-            echo "\nstatus: $status\nfilepath: $filepath\n"
+              
+            echo "status: $status"
+            echo "filepath: $filepath"
             
-            if [[ "$status" == M || "$status" == A ]]; then
+            # Only include files that are staged in the index with no additional changes i.e. 'M.' and 'A.'
+            if [[ "$status" == "M." || "$status" == "A." ]]; then
               staged_additions+=("$filepath")
             fi
 
-            if [[ "$status" == D ]]; then
+            if [[ "$status" == "D." ]]; then
               staged_deletions+=("$filepath")
             fi
           fi
         done <<< "$status_output"
+        echo ""
 
         additions_json=""
         for filepath in "${staged_additions[@]}"; do
