@@ -60,6 +60,8 @@ runs:
           if [[ "$line" == 1* ]]; then
             status=$(echo "$line" | awk '{print $2}')
             filepath=$(echo "$line" | awk '{print $NF}')
+        
+            echo "\nstatus: $status\nfilepath: $filepath\n"
             
             if [[ "$status" == M || "$status" == A ]]; then
               staged_additions+=("$filepath")
