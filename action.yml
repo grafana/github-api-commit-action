@@ -50,7 +50,9 @@ runs:
       shell: bash
       run: |
         status_output=$(git status --porcelain=v2 --branch --untracked-files=no)
-      
+        
+        echo "$status_output"
+        
         staged_additions=()
         staged_deletions=()
 
