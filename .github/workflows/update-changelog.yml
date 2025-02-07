@@ -7,32 +7,27 @@ on:
     types: [closed]
 jobs:
   update_changelog:
+    permissions:
+      contents: write
+      pull-requests: read
     runs-on: ubuntu-latest
     if: github.event.pull_request.merged == true # Only run when the PR was merged. The 'closed' state also includes closed but not merged PRs
     steps:
-      - uses: tibdex/github-app-token@v1
-        id: get_installation_token
-        with:
-          app_id: ${{ secrets.GH_APP_ID }}
-          installation_id: ${{ secrets.GH_APP_INSTALLATION_ID }}
-          private_key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           # We want to update our changelog on main
           ref: 'main'
-          token: ${{ steps.get_installation_token.outputs.token }}
 
       - name: Install utilities
         run: sudo apt-get install jq
 
       - name: Get PR information
         id: pr
-        uses: octokit/request-action@v2.x
+        uses: octokit/request-action@dad4362715b7fb2ddedf9772c8670824af564f0d # v2.4.0
         with:
           route: GET /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}
         env:
-          GITHUB_TOKEN: ${{ steps.get_installation_token.outputs.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update Changelog
         run: |
@@ -42,7 +37,7 @@ jobs:
           git add CHANGELOG.md
 
       - name: Commit changes
-        uses: grafana/github-api-commit-action@v0
+        uses: grafana/github-api-commit-action@ccf9b520c5698380ad3b9619c5add427369b7ef1 # v0.2.0
         with:
-          token: ${{ steps.get_installation_token.outputs.token }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: 'chore: update changelog [BOT]'

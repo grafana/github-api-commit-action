@@ -12,16 +12,129 @@ inputs:
     default: 'false'
   token:
     required: true
-    description: 'GitHub access token'
-  use-checkout-repo:
-    required: false
-    description: 'Whether to use the repo from the checked out .git directory. Defaults to false, meaning it will use the action context repo.'
-    default: 'false'
+    description: 'GitHub access token with permissions to write to repo'
 outputs:
-  commit-sha:
-    description: 'The commit hash of the new commit'
-  committed-files:
-    description: 'Array of the files that were committed'
+  commit-response:
+    description: 'The response from the graphql query'
+    value: ${{ steps.commit-changes.outputs.commit_response }}
 runs:
-  using: 'node16'
-  main: 'dist/index.js'
+  using: 'composite'
+  steps:
+    - name: Setup commit context
+      shell: bash
+      id: commit-context
+      run: |
+        # Get the remote URL (default "origin")
+        REMOTE_URL=$(git remote get-url origin)
+        echo "Remote URL: $REMOTE_URL"
+
+        # Parse the owner and repo using regex
+        if [[ "$REMOTE_URL" =~ (git@|https://)github\.com[:/](.+)/(.+?)(\.git)?$ ]]; then
+          OWNER=${BASH_REMATCH[2]}
+          REPO=${BASH_REMATCH[3]}
+          BRANCH=$(git branch --show-current)
+          echo "repo=$OWNER/$REPO" >> $GITHUB_OUTPUT
+          echo "branch=$BRANCH"
+        else
+          echo "ERROR: Invalid GitHub remote URL"
+          exit 1
+        fi
+
+    - name: Stage all files
+      if: inputs.stage-all-files == 'true'
+      shell: bash
+      run: git add .
+
+    - name: Prep file json
+      id: prep-file-json
+      shell: bash
+      run: |
+        status_output=$(git status --porcelain=v2 --branch --untracked-files=no)
+      
+        staged_additions=()
+        staged_deletions=()
+
+        while IFS= read -r line; do
+          if [[ "$line" == 1* ]]; then
+            status=$(echo "$line" | awk '{print $2}')
+            filepath=$(echo "$line" | awk '{print $NF}')
+            
+            if [[ "$status" == M || "$status" == A ]]; then
+              staged_additions+=("$filepath")
+            fi
+
+            if [[ "$status" == D ]]; then
+              staged_deletions+=("$filepath")
+            fi
+          fi
+        done <<< "$status_output"
+
+        additions_json=""
+        for filepath in "${staged_additions[@]}"; do
+          file_content=$(cat "$filepath" | base64 | tr -d '\n') # Encode file content in Base64
+          additions_json+="{\"path\":\"$filepath\",\"contents\":\"$file_content\"},"
+        done
+
+        # Strip trailing comma from JSON, if applicable
+        additions_json="[${additions_json%,}]"
+      
+        deletions_json=""
+        for filepath in "${staged_deletions[@]}"; do
+          deletions_json+="{\"path\":\"$filepath\"},"
+        done
+        
+        # Strip trailing comma from JSON, if applicable
+        deletions_json="[${deletions_json%,}]"
+        
+        if [[ "$additions_json" == "[]" && "$deletions_json" == "[]" ]]; then
+          echo "No changes to commit"
+          exit 1
+        fi
+
+        # Set outputs for the next step
+        echo "additions=$additions_json" >> $GITHUB_OUTPUT
+        echo "deletions=$deletions_json" >> $GITHUB_OUTPUT
+
+    - name: Commit changes
+      shell: bash
+      id: commit-changes
+      run: |
+        
+        branch_oid=$(git ls-remote origin refs/heads/${{ steps.commit-context.outputs.branch }} | awk '{ print $1 }')
+        
+        if [ -n "$branch_oid" ]; then
+          head_oid=$branch_oid # Use remote OID of the current branch
+        else
+          head_oid=$(git ls-remote origin HEAD | awk '{ print $1 }') # Fallback to HEAD
+        fi
+  
+        graphql_query=$(cat <<EOF
+        mutation {
+          createCommitOnBranch(
+            input: {
+              branch:
+                {
+                  repositoryNameWithOwner: "${{ steps.commit-context.outputs.repo }}",
+                  branchName: "${{ steps.commit-context.outputs.branch }}"
+                },
+              message: { headline: "${{ inputs.commit-message }}" },
+              fileChanges: {
+                additions: ${{ steps.prep-file-json.outputs.additions }},
+                deletions: ${{ steps.prep-file-json.outputs.deletions }}
+              },
+              expectedHeadOid: "$head_oid"
+            }
+          ){
+            commit {
+              url,
+              changedFilesIfAvailable
+            }
+          }
+        }
+        EOF
+        )
+        
+        response=$(gh api graphql -F "query=$graphql_query")
+        echo "commit_response=$response" >> $GITHUB_OUTPUT
+      env:
+        GH_TOKEN: ${{inputs.token}}
