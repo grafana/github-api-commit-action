@@ -34,7 +34,7 @@ runs:
           REPO=${BASH_REMATCH[3]}
           BRANCH=$(git branch --show-current)
           echo "repo=$OWNER/$REPO" >> $GITHUB_OUTPUT
-          echo "branch=$BRANCH"
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
         else
           echo "ERROR: Invalid GitHub remote URL"
           exit 1
@@ -137,8 +137,8 @@ runs:
             } 
           } 
         }'
-        echo '{ "expectedHeadOid": "'$head_oid'", "fileAdditions": ${{ steps.prep-file-json.outputs.additions }}, "fileDeletions": ${{ steps.prep-file-json.outputs.deletions }}, "query": "'$graphql_query'" }'
-#        response=$(echo '{ "expectedHeadOid": "' $head_oid '", "fileAdditions": ${{ steps.prep-file-json.outputs.additions }}, "fileDeletions": ${{ steps.prep-file-json.outputs.deletions }}, "query": "' $graphql_query '" }' | gh api graphql --input -)
-#        echo "commit_response=$response" >> $GITHUB_OUTPUT
+        
+        response=$(echo '{ "expectedHeadOid": "'$head_oid'", "fileAdditions": ${{ steps.prep-file-json.outputs.additions }}, "fileDeletions": ${{ steps.prep-file-json.outputs.deletions }}, "query": "'$graphql_query'" }' | gh api graphql --input -)
+        echo "commit_response=$response" >> $GITHUB_OUTPUT
       env:
         GH_TOKEN: ${{ inputs.token }}
