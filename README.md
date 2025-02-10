@@ -17,7 +17,7 @@ instance, if you create a branch via `git checkout -b my-test-branch` in one of 
 
 ```yaml
   - name: Commit changes
-    uses: grafana/github-api-commit-action@ccf9b520c5698380ad3b9619c5add427369b7ef1 # v0.2.0
+    uses: grafana/github-api-commit-action@077642073699d6dd9e9c42a9f69ce517fabf79d2 # v0.3.0
     with:
       commit-message: "<commit-message>" # Commit message defaults to "Commit performed by grafana/github-api-commit-action"
       create-branch-on-remote: true | false # Whether to create the branch on the remote if it doesn't exist already: Defaults to false
@@ -36,7 +36,7 @@ Example how to use GitHub app installation token
       private_key: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
 
   - name: Commit changes
-    uses: grafana/github-api-commit-action@ccf9b520c5698380ad3b9619c5add427369b7ef1 # v0.2.0
+    uses: grafana/github-api-commit-action@077642073699d6dd9e9c42a9f69ce517fabf79d2 # v0.3.0
     with:
       commit-message: "<commit-message>" # Commit message defaults to "Commit performed by grafana/github-api-commit-action"
       create-branch-on-remote: true | false # Whether to create the branch on the remote if it doesn't exist already: Defaults to false
