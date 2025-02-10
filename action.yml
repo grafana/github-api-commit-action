@@ -74,7 +74,6 @@ runs:
           if [[ "$line" == 1* ]]; then
             status=$(echo "$line" | awk '{print $2}')
             filepath=$(echo "$line" | awk '{print $NF}')
-            renameFilepath=$(echo "$line" | awk '{print $(NF-1)}')
               
             echo "status: $status"
             echo "filepath: $filepath"
@@ -87,10 +86,21 @@ runs:
             if [[ "$status" == "D." ]]; then
               staged_deletions+=("$filepath")
             fi
+          fi
+        
+          # Renames or copies start with 2
+          if [[ "$line" == 2* ]]; then
+            status=$(echo "$line" | awk '{print $2}')
+            oldFilepath=$(echo "$line" | awk '{print $NF}')
+            newFilepath=$(echo "$line" | awk '{print $(NF-1)}')
+        
+            echo "status: $status"
+            echo "old-filepath: $oldFilepath"
+            echo "new-filepath: $newFilepath"
         
             if [[ "$status" == "R." ]]; then
-              staged_deletions+=("$filepath")
-              staged_additions+=("$renameFilepath")
+              staged_deletions+=("$oldFilepath")
+              staged_additions+=("$newFilepath")
             fi
           fi
         done <<< "$status_output"
