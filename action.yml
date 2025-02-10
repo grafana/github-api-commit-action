@@ -6,9 +6,13 @@ inputs:
     required: true
     description: 'The commit message'
     default: 'Commit performed by grafana/github-api-commit-action'
+  create-branch-on-remote:
+    required: true
+    description: 'Whether to create the branch on remote if it does not exist already: true/false'
+    default: 'false'
   stage-all-files:
     required: true
-    description: 'Whether to additionally stage all changed files in the repo prior to committing'
+    description: 'Whether to additionally stage all changed files in the repo prior to committing: true/false'
     default: 'false'
   token:
     required: true
@@ -46,6 +50,15 @@ runs:
       if: inputs.stage-all-files == 'true'
       shell: bash
       run: git add .
+
+    - name: Create branch on remote
+      if: inputs.create-branch-on-remote == 'true'
+      shell: bash
+      run: |
+        onRemote=$(git ls-remote --heads origin ${{ steps.commit-context.outputs.branch }})
+        if [[ -z "$onRemote" ]]; then
+          git push --set-upstream origin ${{ steps.commit-context.outputs.branch }}
+        fi
 
     - name: Get file additions and deletions
       id: additions-and-deletions
@@ -118,7 +131,7 @@ runs:
           head_oid=$(git ls-remote origin HEAD | awk '{ print $1 }') # Fallback to HEAD
         fi
   
-        graphql_query='mutation($expectedHeadOid: GitObjectID!, $fileAdditions: [FileAddition!]!, $fileDeletions: [FileDeletion!]!) { 
+        graphql_query='mutation($expectedHeadOid: GitObjectID!, $fileAdditions: [FileAddition!]!, $fileDeletions: [FileDeletion!]!) {
           createCommitOnBranch( 
             input: { 
               branch: { 

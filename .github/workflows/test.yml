@@ -78,6 +78,7 @@ jobs:
         with:
           token: ${{ github.token }}
           stage-all-files: true
+          create-branch-on-remote: true
           commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Delete test branch
         run: |
@@ -112,6 +113,7 @@ jobs:
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
           git checkout -b $BRANCH_NAME
+          git push --set-upstream origin $BRANCH_NAME
 
           echo $BRANCH_NAME > "test-file1.txt"
           echo $BRANCH_NAME > "test-file2.txt"
@@ -161,7 +163,8 @@ jobs:
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
           git checkout -b $BRANCH_NAME
-
+          git push --set-upstream origin $BRANCH_NAME
+          
           echo $BRANCH_NAME > "test-file1.txt"
           echo $BRANCH_NAME > "test-file2.txt"
           
