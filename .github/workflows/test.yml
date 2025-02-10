@@ -147,6 +147,55 @@ jobs:
           fi
 
           echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
+  test-stage-all-files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+      - name: Setup test branch
+        id: setup-test-branch
+        run: |
+          BRANCH_NAME="test_not_stage_all_files-$(date +%s)"
+
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+          git checkout -b $BRANCH_NAME
+          git push --set-upstream origin $BRANCH_NAME
+
+          echo $BRANCH_NAME > "test-file1.txt"
+          echo $BRANCH_NAME > "test-file2.txt"
+          
+          git add test-file1.txt
+          
+          git status --porcelain=v2 --branch --untracked-files=no
+          
+          echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+      - uses: ./
+        id: test-action
+        with:
+          token: ${{ github.token }}
+          stage-all-files: true
+          commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Delete test branch
+        run: |
+          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Check output
+        run: |
+          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+
+          if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
+            echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
+            exit 1
+          fi
+
+          if [[ "$changedFilesIfAvailable" -ne 2 ]]; then
+            echo "Error: changedFilesIfAvailable is expected to be 1 but got $changedFilesIfAvailable."
+            exit 1
+          fi
+
+          echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
 
   test-multiple-files:
     runs-on: ubuntu-latest
