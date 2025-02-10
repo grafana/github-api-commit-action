@@ -142,7 +142,7 @@ runs:
         EOF
         )
         
-        response=$(gh api graphql -F "fileAdditions=${{ steps.prep-file-json.outputs.additions }}" -F "fileDeletions=${{ steps.prep-file-json.outputs.deletions }}" -F "query=$graphql_query")
+        response=$(echo "{ \"fileAdditions\": ${{ steps.prep-file-json.outputs.additions }}, \"fileDeletions\": ${{ steps.prep-file-json.outputs.deletions }} }" | gh api graphql -F "query=$graphql_query" --input -)
         echo "commit_response=$response" >> $GITHUB_OUTPUT
       env:
         GH_TOKEN: ${{ inputs.token }}
