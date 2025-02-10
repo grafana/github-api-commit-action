@@ -47,8 +47,8 @@ runs:
       shell: bash
       run: git add .
 
-    - name: Prep file json
-      id: prep-file-json
+    - name: Get file additions and deletions
+      id: additions-and-deletions
       shell: bash
       run: |
         status_output=$(git status --porcelain=v2 --branch --untracked-files=no)
@@ -77,31 +77,25 @@ runs:
         done <<< "$status_output"
         echo ""
 
-        additions_json=""
+        additions=""
         for filepath in "${staged_additions[@]}"; do
           file_content=$(cat "$filepath" | base64 | tr -d '\n') # Encode file content in Base64
-          additions_json+="{\"path\":\"$filepath\",\"contents\":\"$file_content\"},"
+          additions+=" -F \"fileAdditions[][path]=$filepath\" -F \"fileAdditions[][contents]=$file_content\" "
         done
-
-        # Strip trailing comma from JSON, if applicable
-        additions_json="[${additions_json%,}]"
       
-        deletions_json=""
+        deletions=""
         for filepath in "${staged_deletions[@]}"; do
-          deletions_json+="{\"path\":\"$filepath\"},"
+          deletions+=" -F \"fileDeletions[][path]=$filepath\" "
         done
         
-        # Strip trailing comma from JSON, if applicable
-        deletions_json="[${deletions_json%,}]"
-        
-        if [[ "$additions_json" == "[]" && "$deletions_json" == "[]" ]]; then
+        if [[ "$additions" == "" && "$deletions" == "" ]]; then
           echo "No changes to commit"
           exit 1
         fi
 
         # Set outputs for the next step
-        echo "additions=$additions_json" >> $GITHUB_OUTPUT
-        echo "deletions=$deletions_json" >> $GITHUB_OUTPUT
+        echo "additions=$additions" >> $GITHUB_OUTPUT
+        echo "deletions=$deletions" >> $GITHUB_OUTPUT
 
     - name: Commit changes
       shell: bash
@@ -138,7 +132,12 @@ runs:
           } 
         }'
         
-        response=$(echo '{ "expectedHeadOid": "'$head_oid'", "fileAdditions": ${{ steps.prep-file-json.outputs.additions }}, "fileDeletions": ${{ steps.prep-file-json.outputs.deletions }}, "query": "'$graphql_query'" }' | gh api graphql --input -)
+        response=$(gh api graphql \
+          -F "expectedHeadOid=$head_oid" \
+          ${{ steps.additions-and-deletions.outputs.additions }} \
+          ${{ steps.additions-and-deletions.outputs.deletions }} \
+          -F "query=$graphql_query" \
+        )
         echo "commit_response=$response" >> $GITHUB_OUTPUT
       env:
         GH_TOKEN: ${{ inputs.token }}
