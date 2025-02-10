@@ -19,9 +19,10 @@ instance, if you create a branch via `git checkout -b my-test-branch` in one of 
   - name: Commit changes
     uses: grafana/github-api-commit-action@ccf9b520c5698380ad3b9619c5add427369b7ef1 # v0.2.0
     with:
-      token: ${{ github.token }} # Token you want to authenticate with
       commit-message: "<commit-message>" # Commit message defaults to "Commit performed by grafana/github-api-commit-action"
+      create-branch-on-remote: true | false # Whether to create the branch on the remote if it doesn't exist already: Defaults to false
       stage-all-files: true | false # Whether to additionally stage any changed files in the checkout. Defaults to false
+      token: ${{ github.token }} # Token you want to authenticate with
 ```
 
 Example how to use GitHub app installation token
@@ -37,9 +38,10 @@ Example how to use GitHub app installation token
   - name: Commit changes
     uses: grafana/github-api-commit-action@ccf9b520c5698380ad3b9619c5add427369b7ef1 # v0.2.0
     with:
-      token: ${{ steps.get_installation_token.outputs.token }} # Token you want to authenticate with
       commit-message: "<commit-message>" # Commit message defaults to "Commit performed by grafana/github-api-commit-action"
+      create-branch-on-remote: true | false # Whether to create the branch on the remote if it doesn't exist already: Defaults to false
       stage-all-files: true | false # Whether to additionally stage any changed files in the checkout. Defaults to false
+      token: ${{ steps.get_installation_token.outputs.token }} # Token you want to authenticate with
 ```
 
 ## Limitations
