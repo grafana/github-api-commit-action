@@ -116,7 +116,7 @@ runs:
           head_oid=$(git ls-remote origin HEAD | awk '{ print $1 }') # Fallback to HEAD
         fi
   
-        graphql_query=graphql_query='mutation(\$expectedHeadOid: String!, \$fileAdditions: [FileAddition!]!, \$fileDeletions: [FileDeletion!]!) { 
+        graphql_query=graphql_query='mutation($expectedHeadOid: String!, $fileAdditions: [FileAddition!]!, $fileDeletions: [FileDeletion!]!) { 
           createCommitOnBranch( 
             input: { 
               branch: { 
@@ -125,10 +125,10 @@ runs:
               }, 
               message: { headline: \"${{ inputs.commit-message }}\" }, 
               fileChanges: { 
-                additions: \$fileAdditions, 
-                deletions: \$fileDeletions 
+                additions: $fileAdditions, 
+                deletions: $fileDeletions 
               }, 
-              expectedHeadOid: \$expectedHeadOid 
+              expectedHeadOid: $expectedHeadOid 
             } 
           ){ 
             commit { 
