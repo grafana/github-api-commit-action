@@ -116,28 +116,28 @@ runs:
           head_oid=$(git ls-remote origin HEAD | awk '{ print $1 }') # Fallback to HEAD
         fi
   
-        graphql_query=graphql_query='mutation(\$expectedHeadOid: String!, \$fileAdditions: [FileAddition!]!, \$fileDeletions: [FileDeletion!]!) { \
-          createCommitOnBranch( \
-            input: { \
-              branch: { \
-                repositoryNameWithOwner: \"${{ steps.commit-context.outputs.repo }}\", \
-                branchName: \"${{ steps.commit-context.outputs.branch }}\" \
-              }, \
-              message: { headline: \"${{ inputs.commit-message }}\" }, \
-              fileChanges: { \
-                additions: \$fileAdditions, \
-                deletions: \$fileDeletions \
-              }, \
-              expectedHeadOid: \$expectedHeadOid \
-            } \
-          ){ \
-            commit { \
-              url, \
-              changedFilesIfAvailable \
-            } \
-          } \
+        graphql_query=graphql_query='mutation(\$expectedHeadOid: String!, \$fileAdditions: [FileAddition!]!, \$fileDeletions: [FileDeletion!]!) { 
+          createCommitOnBranch( 
+            input: { 
+              branch: { 
+                repositoryNameWithOwner: \"${{ steps.commit-context.outputs.repo }}\", 
+                branchName: \"${{ steps.commit-context.outputs.branch }}\" 
+              }, 
+              message: { headline: \"${{ inputs.commit-message }}\" }, 
+              fileChanges: { 
+                additions: \$fileAdditions, 
+                deletions: \$fileDeletions 
+              }, 
+              expectedHeadOid: \$expectedHeadOid 
+            } 
+          ){ 
+            commit { 
+              url, 
+              changedFilesIfAvailable 
+            } 
+          } 
         }'
-        echo '{ "expectedHeadOid": "' $head_oid '", "fileAdditions": ${{ steps.prep-file-json.outputs.additions }}, "fileDeletions": ${{ steps.prep-file-json.outputs.deletions }}, "query": "' $graphql_query '" }'
+        echo '{ "expectedHeadOid": "'$head_oid'", "fileAdditions": ${{ steps.prep-file-json.outputs.additions }}, "fileDeletions": ${{ steps.prep-file-json.outputs.deletions }}, "query": "'$graphql_query'" }'
 #        response=$(echo '{ "expectedHeadOid": "' $head_oid '", "fileAdditions": ${{ steps.prep-file-json.outputs.additions }}, "fileDeletions": ${{ steps.prep-file-json.outputs.deletions }}, "query": "' $graphql_query '" }' | gh api graphql --input -)
 #        echo "commit_response=$response" >> $GITHUB_OUTPUT
       env:
