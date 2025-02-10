@@ -39,6 +39,8 @@ runs:
           echo "ERROR: Invalid GitHub remote URL"
           exit 1
         fi
+      env:
+        GH_TOKEN: ${{ inputs.token }}
 
     - name: Stage all files
       if: inputs.stage-all-files == 'true'
@@ -125,8 +127,8 @@ runs:
                 },
               message: { headline: "${{ inputs.commit-message }}" },
               fileChanges: {
-                additions: ${{ steps.prep-file-json.outputs.additions }},
-                deletions: ${{ steps.prep-file-json.outputs.deletions }}
+                additions: ${{ fromJSON(steps.prep-file-json.outputs.additions) }},
+                deletions: ${{ fromJSON(steps.prep-file-json.outputs.deletions) }}
               },
               expectedHeadOid: "$head_oid"
             }
@@ -143,4 +145,4 @@ runs:
         response=$(gh api graphql -F "query=$graphql_query")
         echo "commit_response=$response" >> $GITHUB_OUTPUT
       env:
-        GH_TOKEN: ${{inputs.token}}
+        GH_TOKEN: ${{ inputs.token }}

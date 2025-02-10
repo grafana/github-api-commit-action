@@ -31,7 +31,7 @@ jobs:
       - uses: ./
         id: test-action
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ github.token }}
           stage-all-files: true
           commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Delete test branch
@@ -76,7 +76,7 @@ jobs:
       - uses: ./
         id: test-action
         with:
-          token: ${{ steps.get_installation_token.outputs.token }}
+          token: ${{ github.token }}
           stage-all-files: true
           commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Delete test branch
@@ -124,7 +124,7 @@ jobs:
       - uses: ./
         id: test-action
         with:
-          token: ${{ steps.get_installation_token.outputs.token }}
+          token: ${{ github.token }}
           stage-all-files: false
           commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Delete test branch
@@ -173,7 +173,7 @@ jobs:
       - uses: ./
         id: test-action
         with:
-          token: ${{ steps.get_installation_token.outputs.token }}
+          token: ${{ github.token }}
           stage-all-files: false
           commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Delete test branch
