@@ -117,7 +117,10 @@ runs:
         fi
   
         graphql_query=$(cat <<EOF
-        mutation {
+        mutation(
+          $fileAdditions: [FileAddition!]
+          $fileDeletions: [FileDeletion!]
+        ){
           createCommitOnBranch(
             input: {
               branch:
@@ -127,8 +130,8 @@ runs:
                 },
               message: { headline: "${{ inputs.commit-message }}" },
               fileChanges: {
-                additions: ${{ fromJSON(steps.prep-file-json.outputs.additions) }},
-                deletions: ${{ fromJSON(steps.prep-file-json.outputs.deletions) }}
+                additions: $fileAdditions,
+                deletions: $fileDeletions
               },
               expectedHeadOid: "$head_oid"
             }
@@ -142,7 +145,7 @@ runs:
         EOF
         )
         
-        response=$(gh api graphql -F "query=$graphql_query")
+        response=$(gh api graphql -F "fileAdditions=${{ steps.prep-file-json.outputs.additions }}" -F "fileDeletions=${{ steps.prep-file-json.outputs.deletions }}" -F "query=$graphql_query")
         echo "commit_response=$response" >> $GITHUB_OUTPUT
       env:
         GH_TOKEN: ${{ inputs.token }}
