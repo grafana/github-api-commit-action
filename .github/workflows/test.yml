@@ -39,7 +39,7 @@ jobs:
           git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
         run: |
-          changedFilesIfAvailable=$(echo "${{ steps.test-action.outputs.commit-response }}" | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
 
           if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
             echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
@@ -84,7 +84,7 @@ jobs:
           git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
         run: |
-          changedFilesIfAvailable=$(echo "${{ steps.test-action.outputs.commit-response }}" | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
 
           if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
             echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
@@ -132,7 +132,7 @@ jobs:
           git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
         run: |
-          changedFilesIfAvailable=$(echo "${{ steps.test-action.outputs.commit-response }}" | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
 
           if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
             echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
@@ -181,7 +181,7 @@ jobs:
           git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
         run: |
-          changedFilesIfAvailable=$(echo "${{ steps.test-action.outputs.commit-response }}" | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
 
           if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
             echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
