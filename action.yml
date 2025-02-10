@@ -134,8 +134,7 @@ runs:
         
         response=$(gh api graphql \
           -F "expectedHeadOid=$head_oid" \
-          ${{ steps.additions-and-deletions.outputs.additions }} \
-          ${{ steps.additions-and-deletions.outputs.deletions }} \
+          ${{ steps.additions-and-deletions.outputs.additions }} ${{ steps.additions-and-deletions.outputs.deletions }} \
           -F "query=$graphql_query" \
         )
         echo "commit_response=$response" >> $GITHUB_OUTPUT
