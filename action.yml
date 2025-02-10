@@ -114,10 +114,10 @@ runs:
           createCommitOnBranch( 
             input: { 
               branch: { 
-                repositoryNameWithOwner: \"${{ steps.commit-context.outputs.repo }}\", 
-                branchName: \"${{ steps.commit-context.outputs.branch }}\" 
+                repositoryNameWithOwner: "${{ steps.commit-context.outputs.repo }}", 
+                branchName: "${{ steps.commit-context.outputs.branch }}" 
               }, 
-              message: { headline: \"${{ inputs.commit-message }}\" }, 
+              message: { headline: "${{ inputs.commit-message }}" }, 
               fileChanges: { 
                 additions: $fileAdditions, 
                 deletions: $fileDeletions 
