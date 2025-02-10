@@ -92,6 +92,14 @@ runs:
           echo "No changes to commit"
           exit 1
         fi
+        
+        if [[ "$additions" == "" ]]; then
+          additions=" -F fileAdditions[] "
+        fi
+        
+        if [[ "$deletions" == "" ]]; then
+          deletions=" -F fileDeletions[] "
+        fi
 
         # Set outputs for the next step
         echo "additions=$additions" >> $GITHUB_OUTPUT
