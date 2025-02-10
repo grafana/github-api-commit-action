@@ -6,22 +6,172 @@ inputs:
     required: true
     description: 'The commit message'
     default: 'Commit performed by grafana/github-api-commit-action'
+  create-branch-on-remote:
+    required: true
+    description: 'Whether to create the branch on remote if it does not exist already: true/false'
+    default: 'false'
   stage-all-files:
     required: true
-    description: 'Whether to additionally stage all changed files in the repo prior to committing'
+    description: 'Whether to additionally stage all changed files in the repo prior to committing: true/false'
     default: 'false'
   token:
     required: true
-    description: 'GitHub access token'
-  use-checkout-repo:
-    required: false
-    description: 'Whether to use the repo from the checked out .git directory. Defaults to false, meaning it will use the action context repo.'
-    default: 'false'
+    description: 'GitHub access token with permissions to write to repo'
 outputs:
-  commit-sha:
-    description: 'The commit hash of the new commit'
-  committed-files:
-    description: 'Array of the files that were committed'
+  commit-response:
+    description: 'The response from the graphql query'
+    value: ${{ steps.commit-changes.outputs.commit_response }}
 runs:
-  using: 'node16'
-  main: 'dist/index.js'
+  using: 'composite'
+  steps:
+    - name: Setup commit context
+      shell: bash
+      id: commit-context
+      run: |
+        # Get the remote URL (default "origin")
+        REMOTE_URL=$(git remote get-url origin)
+        echo "Remote URL: $REMOTE_URL"
+
+        # Parse the owner and repo using regex
+        if [[ "$REMOTE_URL" =~ (git@|https://)github\.com[:/](.+)/(.+?)(\.git)?$ ]]; then
+          OWNER=${BASH_REMATCH[2]}
+          REPO=${BASH_REMATCH[3]}
+          BRANCH=$(git branch --show-current)
+          echo "repo=$OWNER/$REPO" >> $GITHUB_OUTPUT
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+        else
+          echo "ERROR: Invalid GitHub remote URL"
+          exit 1
+        fi
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+
+    - name: Stage all files
+      if: inputs.stage-all-files == 'true'
+      shell: bash
+      run: git add .
+
+    - name: Create branch on remote
+      if: inputs.create-branch-on-remote == 'true'
+      shell: bash
+      run: |
+        onRemote=$(git ls-remote --heads origin ${{ steps.commit-context.outputs.branch }})
+        if [[ -z "$onRemote" ]]; then
+          git push --set-upstream origin ${{ steps.commit-context.outputs.branch }}
+        fi
+
+    - name: Get file additions and deletions
+      id: additions-and-deletions
+      shell: bash
+      run: |
+        status_output=$(git status --porcelain=v2 --branch --untracked-files=no)
+        
+        staged_additions=()
+        staged_deletions=()
+
+        echo ""
+        while IFS= read -r line; do
+          if [[ "$line" == 1* ]]; then
+            status=$(echo "$line" | awk '{print $2}')
+            filepath=$(echo "$line" | awk '{print $NF}')
+              
+            echo "status: $status"
+            echo "filepath: $filepath"
+            
+            # Only include files that are staged in the index with no additional changes i.e. 'M.' and 'A.'
+            if [[ "$status" == "M." || "$status" == "A." ]]; then
+              staged_additions+=("$filepath")
+            fi
+
+            if [[ "$status" == "D." ]]; then
+              staged_deletions+=("$filepath")
+            fi
+          fi
+        
+          # Renames or copies start with 2
+          if [[ "$line" == 2* ]]; then
+            status=$(echo "$line" | awk '{print $2}')
+            oldFilepath=$(echo "$line" | awk '{print $NF}')
+            newFilepath=$(echo "$line" | awk '{print $(NF-1)}')
+        
+            echo "status: $status"
+            echo "old-filepath: $oldFilepath"
+            echo "new-filepath: $newFilepath"
+        
+            if [[ "$status" == "R." ]]; then
+              staged_deletions+=("$oldFilepath")
+              staged_additions+=("$newFilepath")
+            fi
+          fi
+        done <<< "$status_output"
+        echo ""
+
+        additions=""
+        for filepath in "${staged_additions[@]}"; do
+          file_content=$(cat "$filepath" | base64 | tr -d '\n') # Encode file content in Base64
+          additions+=" -F \"fileAdditions[][path]=$filepath\" -F \"fileAdditions[][contents]=$file_content\" "
+        done
+      
+        deletions=""
+        for filepath in "${staged_deletions[@]}"; do
+          deletions+=" -F \"fileDeletions[][path]=$filepath\" "
+        done
+        
+        if [[ "$additions" == "" && "$deletions" == "" ]]; then
+          echo "No changes to commit"
+          exit 1
+        fi
+        
+        if [[ "$additions" == "" ]]; then
+          additions=" -F fileAdditions[] "
+        fi
+        
+        if [[ "$deletions" == "" ]]; then
+          deletions=" -F fileDeletions[] "
+        fi
+
+        # Set outputs for the next step
+        echo "additions=$additions" >> $GITHUB_OUTPUT
+        echo "deletions=$deletions" >> $GITHUB_OUTPUT
+
+    - name: Commit changes
+      shell: bash
+      id: commit-changes
+      run: |
+        
+        branch_oid=$(git ls-remote origin refs/heads/${{ steps.commit-context.outputs.branch }} | awk '{ print $1 }')
+        
+        if [ -n "$branch_oid" ]; then
+          head_oid=$branch_oid # Use remote OID of the current branch
+        else
+          head_oid=$(git ls-remote origin HEAD | awk '{ print $1 }') # Fallback to HEAD
+        fi
+  
+        graphql_query='mutation($expectedHeadOid: GitObjectID!, $fileAdditions: [FileAddition!]!, $fileDeletions: [FileDeletion!]!) {
+          createCommitOnBranch( 
+            input: { 
+              branch: { 
+                repositoryNameWithOwner: "${{ steps.commit-context.outputs.repo }}", 
+                branchName: "${{ steps.commit-context.outputs.branch }}" 
+              }, 
+              message: { headline: "${{ inputs.commit-message }}" }, 
+              fileChanges: { 
+                additions: $fileAdditions, 
+                deletions: $fileDeletions 
+              }, 
+              expectedHeadOid: $expectedHeadOid 
+            } 
+          ){ 
+            commit { 
+              url, 
+              changedFilesIfAvailable 
+            } 
+          } 
+        }'
+        
+        echo $graphql_query
+        
+        response=$(gh api graphql -F "expectedHeadOid=$head_oid" ${{ steps.additions-and-deletions.outputs.additions }} ${{ steps.additions-and-deletions.outputs.deletions }} -F "query=$graphql_query")
+        echo "commit_response=$response" >> $GITHUB_OUTPUT
+      env:
+        GH_TOKEN: ${{ inputs.token }}

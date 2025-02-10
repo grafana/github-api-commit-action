@@ -1,4 +1,4 @@
-name: 'build-test'
+name: 'Test'
 on: # rebuild any PRs and main branch changes
   pull_request:
   push:
@@ -7,51 +7,340 @@ on: # rebuild any PRs and main branch changes
       - 'releases/*'
 
 jobs:
-  build: # make sure build/ci work properly
+  test-branch-on-remote: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v3
-        with:
-          node-version: lts/gallium
-      - uses: actions/checkout@v3
-      - run: yarn install --immutable
-      - run: yarn all
-  test: # make sure the action works on a clean machine without building
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v3
-        with:
-          node-version: lts/gallium
-      - uses: tibdex/github-app-token@v1
-        id: get_installation_token
-        with:
-          app_id: ${{ secrets.GH_APP_ID }}
-          installation_id: ${{ secrets.GH_APP_INSTALLATION_ID }}
-          private_key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ github.head_ref || github.ref }}
-          token: ${{ steps.get_installation_token.outputs.token }}
       - name: Setup test branch
         id: setup-test-branch
         run: |
-          BRANCH_NAME="test-$(date +%s)"
+          BRANCH_NAME="test_on_remote-$(date +%s)"
           
-          git config --global user.name '${{ secrets.GH_APP_USERNAME }}'
-          git config --global user.email '${{ secrets.GH_APP_EMAIL }}'
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           
           git checkout -b $BRANCH_NAME
           git push --set-upstream origin $BRANCH_NAME
           
+          git status --porcelain=v2 --branch --untracked-files=no
+          
           echo $BRANCH_NAME > "test-file.txt"
           echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
       - uses: ./
+        id: test-action
         with:
-          token: ${{ steps.get_installation_token.outputs.token }}
+          token: ${{ github.token }}
           stage-all-files: true
           commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Delete test branch
         run: |
           git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Check output
+        run: |
+          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+
+          if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
+            echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
+            exit 1
+          fi
+
+          if [[ "$changedFilesIfAvailable" -ne 1 ]]; then
+            echo "Error: changedFilesIfAvailable is expected to be 1 but got $changedFilesIfAvailable."
+            exit 1
+          fi
+
+          echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
+
+  test-branch-not-on-remote: # make sure the action works on a clean machine without building
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+      - name: Setup test branch
+        id: setup-test-branch
+        run: |
+          BRANCH_NAME="test_not_on_remote-$(date +%s)"
+          
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          
+          git checkout -b $BRANCH_NAME
+          
+          git status --porcelain=v2 --branch --untracked-files=no
+          
+          echo $BRANCH_NAME > "test-file.txt"
+          echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+      - uses: ./
+        id: test-action
+        with:
+          token: ${{ github.token }}
+          stage-all-files: true
+          create-branch-on-remote: true
+          commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Delete test branch
+        run: |
+          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Check output
+        run: |
+          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+
+          if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
+            echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
+            exit 1
+          fi
+
+          if [[ "$changedFilesIfAvailable" -ne 1 ]]; then
+            echo "Error: changedFilesIfAvailable is expected to be 1 but got $changedFilesIfAvailable."
+            exit 1
+          fi
+
+          echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
+  test-not-stage-all-files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+      - name: Setup test branch
+        id: setup-test-branch
+        run: |
+          BRANCH_NAME="test_not_stage_all_files-$(date +%s)"
+
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+          git checkout -b $BRANCH_NAME
+          git push --set-upstream origin $BRANCH_NAME
+
+          echo $BRANCH_NAME > "test-file1.txt"
+          echo $BRANCH_NAME > "test-file2.txt"
+          
+          git add test-file1.txt
+          
+          git status --porcelain=v2 --branch --untracked-files=no
+          
+          echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+      - uses: ./
+        id: test-action
+        with:
+          token: ${{ github.token }}
+          stage-all-files: false
+          commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Delete test branch
+        run: |
+          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Check output
+        run: |
+          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+
+          if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
+            echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
+            exit 1
+          fi
+
+          if [[ "$changedFilesIfAvailable" -ne 1 ]]; then
+            echo "Error: changedFilesIfAvailable is expected to be 1 but got $changedFilesIfAvailable."
+            exit 1
+          fi
+
+          echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
+  test-stage-all-files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+      - name: Setup test branch
+        id: setup-test-branch
+        run: |
+          BRANCH_NAME="test_stage_all_files-$(date +%s)"
+
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+          git checkout -b $BRANCH_NAME
+          git push --set-upstream origin $BRANCH_NAME
+
+          echo $BRANCH_NAME > "test-file1.txt"
+          echo $BRANCH_NAME > "test-file2.txt"
+          
+          git add test-file1.txt
+          
+          git status --porcelain=v2 --branch --untracked-files=no
+          
+          echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+      - uses: ./
+        id: test-action
+        with:
+          token: ${{ github.token }}
+          stage-all-files: true
+          commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Delete test branch
+        run: |
+          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Check output
+        run: |
+          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+
+          if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
+            echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
+            exit 1
+          fi
+
+          if [[ "$changedFilesIfAvailable" -ne 2 ]]; then
+            echo "Error: changedFilesIfAvailable is expected to be 1 but got $changedFilesIfAvailable."
+            exit 1
+          fi
+
+          echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
+
+  test-multiple-files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+      - name: Setup test branch
+        id: setup-test-branch
+        run: |
+          BRANCH_NAME="test_multiple_files-$(date +%s)"
+
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+          git checkout -b $BRANCH_NAME
+          git push --set-upstream origin $BRANCH_NAME
+          
+          echo $BRANCH_NAME > "test-file1.txt"
+          echo $BRANCH_NAME > "test-file2.txt"
+          
+          git add .
+          
+          git status --porcelain=v2 --branch --untracked-files=no
+          
+          echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+      - uses: ./
+        id: test-action
+        with:
+          token: ${{ github.token }}
+          stage-all-files: false
+          commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Delete test branch
+        run: |
+          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Check output
+        run: |
+          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+
+          if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
+            echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
+            exit 1
+          fi
+
+          if [[ "$changedFilesIfAvailable" -ne 2 ]]; then
+            echo "Error: changedFilesIfAvailable is expected to be 2 but got $changedFilesIfAvailable."
+            exit 1
+          fi
+
+          echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
+  test-file-rename: # make sure the action works on a clean machine without building
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+      - name: Setup test branch
+        id: setup-test-branch
+        run: |
+          BRANCH_NAME="test_file_rename-$(date +%s)"
+
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+          git checkout -b $BRANCH_NAME
+          git push --set-upstream origin $BRANCH_NAME
+          
+          mv test-files/test-renames.old test-files/test-renames.new
+          
+          git add .
+
+          git status --porcelain=v2 --branch --untracked-files=no
+
+          echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+      - uses: ./
+        id: test-action
+        with:
+          token: ${{ github.token }}
+          stage-all-files: true
+          commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Delete test branch
+        run: |
+          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Check output
+        run: |
+          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+
+          if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
+            echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
+            exit 1
+          fi
+
+          if [[ "$changedFilesIfAvailable" -ne 1 ]]; then
+            echo "Error: changedFilesIfAvailable is expected to be 1 but got $changedFilesIfAvailable."
+            exit 1
+          fi
+
+          echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
+
+  test-modify-file: # make sure the action works on a clean machine without building
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+      - name: Setup test branch
+        id: setup-test-branch
+        run: |
+          BRANCH_NAME="test_modify-file-$(date +%s)"
+
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+          git checkout -b $BRANCH_NAME
+          git push --set-upstream origin $BRANCH_NAME
+          
+          echo "new file content" >> test-files/test-modify.txt
+          
+          git add .
+
+          # output status here to manually verify file changes
+          git status --porcelain=v2 --branch --untracked-files=no
+
+          echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+      - uses: ./
+        id: test-action
+        with:
+          token: ${{ github.token }}
+          stage-all-files: true
+          commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Delete test branch
+        run: |
+          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Check output
+        run: |
+          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+
+          if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
+            echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
+            exit 1
+          fi
+
+          if [[ "$changedFilesIfAvailable" -ne 1 ]]; then
+            echo "Error: changedFilesIfAvailable is expected to be 1 but got $changedFilesIfAvailable."
+            exit 1
+          fi
+
+          echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
