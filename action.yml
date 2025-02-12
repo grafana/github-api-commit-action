@@ -33,7 +33,7 @@ runs:
         echo "Remote URL: $REMOTE_URL"
 
         # Parse the owner and repo using regex
-        if [[ "$REMOTE_URL" =~ (git@|https://)github\.com[:/](.+)/(.+?)(\.git)?$ ]]; then
+        if [[ "$REMOTE_URL" =~ (.*?)github\.com[:/](.+)/(.+?)(\.git)?$ ]]; then
           OWNER=${BASH_REMATCH[2]}
           REPO=${BASH_REMATCH[3]}
           BRANCH=$(git branch --show-current)
