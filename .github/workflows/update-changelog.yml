@@ -9,9 +9,9 @@ jobs:
   update_changelog:
     permissions:
       contents: write
-      pull-requests: read
+      pull-requests: write
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true # Only run when the PR was merged. The 'closed' state also includes closed but not merged PRs
+    if: github.event.pull_request.merged == true && github.actor != 'github-actions[bot]'
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -31,13 +31,34 @@ jobs:
 
       - name: Update Changelog
         run: |
-          PR_DATA='${{ steps.pr.outputs.data }}'
-          PR_LINE=$(echo $PR_DATA | jq -r '"- \(.title) ([#\(.number)](\(.html_url))) - [@\(.user.login)](\(.user.html_url)) - \(.merged_at | if . == null then "" else . | fromdateiso8601 | strftime("%Y-%m-%d") end)"')
+          BRANCH_NAME="update-changelog-$(date +%s)"
+          
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+          git checkout -b $BRANCH_NAME
+          git push --set-upstream origin $BRANCH_NAME
+          
+          PR_LINE=$(node .github/workflows/scripts/get-changelog-line.js)
           sed -i "/## Unreleased/ a $PR_LINE" CHANGELOG.md
           git add CHANGELOG.md
+        env:
+          PR_DATA: ${{ steps.pr.outputs.data }}
 
       - name: Commit changes
-        uses: grafana/github-api-commit-action@ccf9b520c5698380ad3b9619c5add427369b7ef1 # v0.2.0
+        uses: grafana/github-api-commit-action@077642073699d6dd9e9c42a9f69ce517fabf79d2 # v0.3.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: 'chore: update changelog [BOT]'
+          commit-message: 'chore: update readme for tag $TAG [BOT]'
+
+      - name: Create pull request
+        id: cpr
+        run: |
+          PR_URL=$(gh pr create --title "chore: update changelog [bot]" --body "PR created automatically through update-changelog.yml workflow")
+          echo "PR_URL=$PR_URL" >> $GITHUB_OUTPUT
+
+      - name: Approve and auto-merge
+        run: gh pr review --approve "$PR_URL" && gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{steps.cpr.outputs.PR_URL}}
+          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}

@@ -108,4 +108,4 @@ lib/**/*
 !.yarn/sdks
 !.yarn/versions
 
-scripts/
+./scripts/
