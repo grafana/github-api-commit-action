@@ -1,4 +1,4 @@
-name: Update README for New Tags
+name: Release on tag
 
 on:
   push:
@@ -64,3 +64,13 @@ jobs:
         env:
           PR_URL: ${{steps.cpr.outputs.PR_URL}}
           GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+  create-release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Github release
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2.2.1
+        with:
+          generate_release_notes: true
+          tag_name: ${{ github.ref_name }}
