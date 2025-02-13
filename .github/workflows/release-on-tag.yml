@@ -1,0 +1,76 @@
+name: Release on tag
+
+on:
+  push:
+    tags:
+      - 'v*.*.*' # Matches semantic version tags like v1.0.0
+
+jobs:
+  update-readme:
+    permissions:
+      contents: write
+      pull-requests: write
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Get tag details
+        id: tag_info
+        run: |
+          TAG=${{ github.ref_name }}
+          COMMIT_HASH=$(git rev-parse $TAG)
+          echo "tag=$TAG" >> $GITHUB_ENV
+          echo "commit_hash=$COMMIT_HASH" >> $GITHUB_ENV
+
+      - name: Update readme
+        run: |
+          BRANCH_NAME="update-readme-$TAG"
+          
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+          git checkout -b $BRANCH_NAME
+          git push --set-upstream origin $BRANCH_NAME
+          
+          # Read the template file
+          TEMPLATE=$(<docs/README.tmpl)
+
+          # Replace placeholders with the actual tag and commit hash
+          UPDATED_README="${TEMPLATE//<tag_commit_hash>/$COMMIT_HASH}"
+          UPDATED_README="${UPDATED_README//<new_tag>/$TAG}"
+
+          # Write the updated contents to README.md
+          echo "$UPDATED_README" > README.md
+          
+          git add README.md
+
+      - name: Commit changes
+        uses: grafana/github-api-commit-action@077642073699d6dd9e9c42a9f69ce517fabf79d2 # v0.3.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: update readme for tag $TAG [BOT]'
+
+      - name: Create pull request
+        id: cpr
+        run: |
+          PR_URL=$(gh pr create --title "chore: update readme for tag $TAG [bot]" --body "PR created automatically through update-readme.yml workflow")
+          echo "PR_URL=$PR_URL" >> $GITHUB_OUTPUT
+
+      - name: Approve and auto-merge
+        run: gh pr review --approve "$PR_URL" && gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{steps.cpr.outputs.PR_URL}}
+          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+  create-release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Github release
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2.2.1
+        with:
+          generate_release_notes: true
+          tag_name: ${{ github.ref_name }}
