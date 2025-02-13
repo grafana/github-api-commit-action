@@ -58,6 +58,8 @@ jobs:
         run: |
           PR_URL=$(gh pr create --title "chore: update readme for tag $TAG [bot]" --body "PR created automatically through update-readme.yml workflow")
           echo "PR_URL=$PR_URL" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Approve and auto-merge
         run: gh pr review --approve "$PR_URL" && gh pr merge --auto --squash "$PR_URL"
