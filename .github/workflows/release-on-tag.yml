@@ -48,7 +48,7 @@ jobs:
           git add README.md
 
       - name: Commit changes
-        uses: grafana/github-api-commit-action@077642073699d6dd9e9c42a9f69ce517fabf79d2 # v0.3.0
+        uses: grafana/github-api-commit-action@41fe732f3adb869c954416c517c0fd7b90c60c5e # v0.3.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: 'chore: update readme for tag $TAG [BOT]'
