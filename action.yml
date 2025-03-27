@@ -119,7 +119,6 @@ runs:
         
         if [[ "$additions" == "" && "$deletions" == "" ]]; then
           echo "No changes to commit"
-          exit 1
         fi
         
         if [[ "$additions" == "" ]]; then
