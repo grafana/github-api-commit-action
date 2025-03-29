@@ -49,6 +49,7 @@ Example how to use GitHub app installation token
 - The branch that is checked out needs to be in an attached state. Meaning that you can commit and push to it
 - Currently, the action only supports adding, updating, and deleting files. It doesn't reconstruct the entire tree for
   commit. Moving files would succeed, but the old file will still remain in its location.
+- The cumulative size of modified files cannot be bigger than 40MB due to GitHub API limits. Note that contents of deleted files are not considered for this limit.
 
 # (Legacy) GitHub Api Commit
 
