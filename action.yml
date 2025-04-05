@@ -119,6 +119,8 @@ runs:
         
         if [[ "$additions" == "" && "$deletions" == "" ]]; then
           echo "No changes to commit"
+          echo "any_changed=false"  >> $GITHUB_OUTPUT
+          exit 0
         fi
         
         if [[ "$additions" == "" ]]; then
@@ -130,10 +132,12 @@ runs:
         fi
 
         # Set outputs for the next step
+        echo "any_changed=true"  >> $GITHUB_OUTPUT
         echo "additions=$additions" >> $GITHUB_OUTPUT
         echo "deletions=$deletions" >> $GITHUB_OUTPUT
 
     - name: Commit changes
+      if: ${{ steps.additions-and-deletions.outputs.any_changed == 'true' }}
       shell: bash
       id: commit-changes
       run: |
