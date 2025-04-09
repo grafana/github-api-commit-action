@@ -6,6 +6,9 @@ on: # rebuild any PRs and main branch changes
       - main
       - 'releases/*'
 
+permissions:
+  contents: write
+
 jobs:
   test-branch-on-remote: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
