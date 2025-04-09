@@ -6,11 +6,10 @@ on: # rebuild any PRs and main branch changes
       - main
       - 'releases/*'
 
-permissions:
-  contents: write
-
 jobs:
   test-branch-on-remote: # make sure the action works on a clean machine without building
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
