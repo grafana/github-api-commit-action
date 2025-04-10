@@ -456,12 +456,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          ref: ${{ github.head_ref || github.ref }}
       - name: Setup test branch
         id: setup-test-branch
         run: |
-          BRANCH_NAME="test_no-changes-$(date +%s)"
+          BRANCH_NAME="test_failure_no-changes-$(date +%s)"
 
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
@@ -478,7 +476,6 @@ jobs:
         continue-on-error: true
         with:
           token: ${{ github.token }}
-          stage-all-files: true
           commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output is failure
         if: ${{ failure() }}
@@ -499,17 +496,14 @@ jobs:
         run: |
           git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
       
-
   test-success-if-no-changes: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          ref: ${{ github.head_ref || github.ref }}
       - name: Setup test branch
         id: setup-test-branch
         run: |
-          BRANCH_NAME="test_no-changes-$(date +%s)"
+          BRANCH_NAME="test_success_no-changes-$(date +%s)"
 
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
@@ -526,7 +520,6 @@ jobs:
         continue-on-error: true
         with:
           token: ${{ github.token }}
-          stage-all-files: true
           success-if-no-changes: true
           commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output is failure
