@@ -14,6 +14,10 @@ inputs:
     required: true
     description: 'Whether to additionally stage all changed files in the repo prior to committing: true/false'
     default: 'false'
+  success-if-no-changes:
+    required: true
+    description: 'Whether to return success if no changes are detected: true/false'
+    default: 'false'
   token:
     required: true
     description: 'GitHub access token with permissions to write to repo'
@@ -119,7 +123,13 @@ runs:
         
         if [[ "$additions" == "" && "$deletions" == "" ]]; then
           echo "No changes to commit"
-          exit 1
+          echo "any_changed=false"  >> $GITHUB_OUTPUT
+
+          if [[ "${{ inputs.success-if-no-changes }}" == "true" ]]; then
+            exit 0
+          else
+            exit 1
+          fi
         fi
         
         if [[ "$additions" == "" ]]; then
@@ -131,10 +141,12 @@ runs:
         fi
 
         # Set outputs for the next step
+        echo "any_changed=true"  >> $GITHUB_OUTPUT
         echo "additions=$additions" >> $GITHUB_OUTPUT
         echo "deletions=$deletions" >> $GITHUB_OUTPUT
 
     - name: Commit changes
+      if: ${{ steps.additions-and-deletions.outputs.any_changed == 'true' }}
       shell: bash
       id: commit-changes
       run: |

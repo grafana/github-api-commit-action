@@ -451,3 +451,92 @@ jobs:
           fi
 
           echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
+
+  test-fail-if-no-changes: # make sure the action works on a clean machine without building
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Setup test branch
+        id: setup-test-branch
+        run: |
+          BRANCH_NAME="test_failure_no-changes-$(date +%s)"
+
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+          git checkout -b $BRANCH_NAME
+          git push --set-upstream origin $BRANCH_NAME
+
+          # output status here to manually verify file changes
+          git status --porcelain=v2 --branch --untracked-files=no
+
+          echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+      - uses: ./
+        id: test-action
+        continue-on-error: true
+        with:
+          token: ${{ github.token }}
+          commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Check output is failure
+        if: ${{ failure() }}
+        run: |
+          if [[ -z "${{ steps.test-action.outputs.commit-response }}" ]]; then
+            echo "Validation passed: commit-response is empty."
+          else
+            echo "Error: commit-response is expected to be empty but got not empty."
+            exit 1
+          fi
+      - name: Check output is success
+        if: ${{ success() }}
+        run: |
+          echo "Error: action status is expected to be failure but got success."
+          exit 1
+      - name: Delete test branch
+        if: ${{ always() }}
+        run: |
+          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+      
+  test-success-if-no-changes: # make sure the action works on a clean machine without building
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Setup test branch
+        id: setup-test-branch
+        run: |
+          BRANCH_NAME="test_success_no-changes-$(date +%s)"
+
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+          git checkout -b $BRANCH_NAME
+          git push --set-upstream origin $BRANCH_NAME
+
+          # output status here to manually verify file changes
+          git status --porcelain=v2 --branch --untracked-files=no
+
+          echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+      - uses: ./
+        id: test-action
+        continue-on-error: true
+        with:
+          token: ${{ github.token }}
+          success-if-no-changes: true
+          commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Check output is failure
+        if: ${{ failure() }}
+        run: |
+          echo "Error: action status is expected to be success but got failure."
+          exit 1  
+      - name: Check output is success
+        if: ${{ success() }}
+        run: |
+          if [[ -z "${{ steps.test-action.outputs.commit-response }}" ]]; then
+            echo "Validation passed: commit-response is empty."
+          else
+            echo "Error: commit-response is expected to be empty but got not empty."
+            exit 1
+          fi
+      - name: Delete test branch
+        if: ${{ always() }}
+        run: |
+          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
