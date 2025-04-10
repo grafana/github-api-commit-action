@@ -1,0 +1,17 @@
+name: 'CI'
+on:
+  pull_request:
+
+env:
+  IS_FORK: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run tests
+        if: ${{ env.IS_FORK == 'false' }}
+        uses: ./.github/workflows/test.yml
+        secrets: inherit
+        with:
+          branch_ref: ${{ github.ref }}
