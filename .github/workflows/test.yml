@@ -16,7 +16,7 @@ jobs:
         id: setup-test-branch
         run: |
           BRANCH_NAME="test_on_remote-$(date +%s)"
-          
+          # test comment
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           
