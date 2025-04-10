@@ -8,6 +8,7 @@ on:
 jobs:
   update_changelog:
     permissions:
+      id-token: write
       contents: write
       pull-requests: write
     runs-on: ubuntu-latest
@@ -55,12 +56,26 @@ jobs:
         id: cpr
         run: |
           PR_URL=$(gh pr create --title "chore: update changelog [bot]" --body "PR created automatically through update-changelog.yml workflow")
+          gh pr merge --auto --squash "$PR_URL"
           echo "PR_URL=$PR_URL" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ github.token }}
 
-      - name: Approve and auto-merge
-        run: gh pr review --approve "$PR_URL" && gh pr merge --auto --squash "$PR_URL"
+      - id: get-secrets
+        uses: grafana/shared-workflows/actions/get-vault-secrets@main
+        with:
+          repo_secrets: |
+            GITHUB_APP_ID=helper-bot:app-id
+            GITHUB_APP_PRIVATE_KEY=helper-bot:private-key
+
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ env.GITHUB_APP_ID }}
+          private-key: ${{ env.GITHUB_APP_PRIVATE_KEY }}
+
+      - name: Approve PR
+        run: gh pr review --approve "$PR_URL"
         env:
           PR_URL: ${{steps.cpr.outputs.PR_URL}}
-          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
