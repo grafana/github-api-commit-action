@@ -47,6 +47,7 @@ jobs:
           stage-all-files: true
           commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Delete test branch
+        if: ${{ always() }}
         run: |
           git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
@@ -93,6 +94,7 @@ jobs:
           create-branch-on-remote: true
           commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Delete test branch
+        if: ${{ always() }}
         run: |
           git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
@@ -142,6 +144,7 @@ jobs:
           stage-all-files: false
           commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Delete test branch
+        if: ${{ always() }}
         run: |
           git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
@@ -191,6 +194,7 @@ jobs:
           stage-all-files: true
           commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Delete test branch
+        if: ${{ always() }}
         run: |
           git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
@@ -241,6 +245,7 @@ jobs:
           stage-all-files: false
           commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Delete test branch
+        if: ${{ always() }}
         run: |
           git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
@@ -289,6 +294,7 @@ jobs:
           stage-all-files: true
           commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Delete test branch
+        if: ${{ always() }}
         run: |
           git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
@@ -339,6 +345,7 @@ jobs:
           stage-all-files: true
           commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Delete test branch
+        if: ${{ always() }}
         run: |
           git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
@@ -388,6 +395,7 @@ jobs:
           stage-all-files: true
           commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Delete test branch
+        if: ${{ always() }}
         run: |
           git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
@@ -434,6 +442,7 @@ jobs:
           stage-all-files: true
           commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Delete test branch
+        if: ${{ always() }}
         run: |
           git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
@@ -478,7 +487,7 @@ jobs:
           token: ${{ github.token }}
           commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output is failure
-        if: ${{ failure() }}
+        if: ${{ steps.test-action.outcome == 'failure' }}
         run: |
           if [[ -z "${{ steps.test-action.outputs.commit-response }}" ]]; then
             echo "Validation passed: commit-response is empty."
@@ -487,7 +496,7 @@ jobs:
             exit 1
           fi
       - name: Check output is success
-        if: ${{ success() }}
+        if: ${{ steps.test-action.outcome == 'success' }}
         run: |
           echo "Error: action status is expected to be failure but got success."
           exit 1
@@ -523,12 +532,12 @@ jobs:
           success-if-no-changes: true
           commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output is failure
-        if: ${{ failure() }}
+        if: ${{ steps.test-action.outcome == 'failure' }}
         run: |
           echo "Error: action status is expected to be success but got failure."
           exit 1  
       - name: Check output is success
-        if: ${{ success() }}
+        if: ${{ steps.test-action.outcome == 'success' }}
         run: |
           if [[ -z "${{ steps.test-action.outputs.commit-response }}" ]]; then
             echo "Validation passed: commit-response is empty."
