@@ -7,6 +7,29 @@ on: # rebuild any PRs and main branch changes
       - 'releases/*'
 
 jobs:
+  test-commit-to-main: # make sure the action works on a clean machine without building
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup test branch
+        id: setup-test-branch
+        run: |
+          BRANCH_NAME="test_commit-to-main-$(date +%s)"
+          # test comment
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          
+          git status --porcelain=v2 --branch --untracked-files=no
+          
+          echo $BRANCH_NAME > "test-file.txt"
+          echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+      - uses: ./
+        id: test-action
+        with:
+          token: ${{ github.token }}
+          stage-all-files: true
+          commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
   test-branch-on-remote: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:
