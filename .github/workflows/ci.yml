@@ -7,11 +7,9 @@ env:
 
 jobs:
   tests:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Run tests
-        if: ${{ env.IS_FORK == 'false' }}
-        uses: ./.github/workflows/test.yml
-        secrets: inherit
-        with:
-          branch_ref: ${{ github.ref }}
+    name: Run tests
+    if: ${{ env.IS_FORK == 'false' }}
+    uses: ./.github/workflows/test.yml
+    secrets: inherit
+    with:
+      branch_ref: ${{ github.ref }}
