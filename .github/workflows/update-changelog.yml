@@ -68,7 +68,7 @@ jobs:
             GITHUB_APP_ID=helper-bot:app-id
             GITHUB_APP_PRIVATE_KEY=helper-bot:private-key
 
-      - uses: actions/create-github-app-token@v1
+      - uses: actions/create-github-app-token@v2
         id: app-token
         with:
           app-id: ${{ env.GITHUB_APP_ID }}
