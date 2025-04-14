@@ -229,9 +229,20 @@ jobs:
 
           git checkout -b $BRANCH_NAME
           git push --set-upstream origin $BRANCH_NAME
-          
-          echo $BRANCH_NAME > "test-file1.txt"
-          echo $BRANCH_NAME > "test-file2.txt"
+
+          file_content="$(mktemp temp-random-file-XXXXXX)"
+          # generate a file with 500KB of As
+          yes A | head -c 500000 > "$file_content"
+
+          for i in {1..10}
+          do
+              cp "$file_content" "test-file$i.txt"
+              echo "test-file$i.txt size: $(stat -c '%s' test-file$i.txt)"
+          done
+
+          # remove the temp file as we don't want to commit it
+          rm "$file_content"
+
           
           git add .
           
@@ -257,12 +268,124 @@ jobs:
             exit 1
           fi
 
-          if [[ "$changedFilesIfAvailable" -ne 2 ]]; then
-            echo "Error: changedFilesIfAvailable is expected to be 2 but got $changedFilesIfAvailable."
+          if [[ "$changedFilesIfAvailable" -ne 10 ]]; then
+            echo "Error: changedFilesIfAvailable is expected to be 10 but got $changedFilesIfAvailable."
             exit 1
           fi
 
           echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
+
+  test-very-large-file:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ env.CHECKOUT_REF }}
+      - name: Setup test branch
+        id: setup-test-branch
+        run: |
+          BRANCH_NAME="test_very_large_file-$(date +%s)"
+
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+          git checkout -b $BRANCH_NAME
+          git push --set-upstream origin $BRANCH_NAME
+
+          # generate a file with 25MB of As
+          yes A | head -c 25000000 >  test-file.txt
+          echo "test-file.txt size: $(stat -c '%s' test-file.txt)"
+
+          git add .
+
+          git status --porcelain=v2 --branch --untracked-files=no
+
+          echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+      - uses: ./
+        id: test-action
+        with:
+          token: ${{ github.token }}
+          stage-all-files: false
+          commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Delete test branch
+        run: |
+          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Check output
+        run: |
+          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+
+          if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
+            echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
+            exit 1
+          fi
+
+          if [[ "$changedFilesIfAvailable" -ne 1 ]]; then
+            echo "Error: changedFilesIfAvailable is expected to be 1 but got $changedFilesIfAvailable."
+            exit 1
+          fi
+
+          echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
+
+  test-multiple-large-files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ env.CHECKOUT_REF }}
+      - name: Setup test branch
+        id: setup-test-branch
+        run: |
+          BRANCH_NAME="test_multiple_large_files-$(date +%s)"
+
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+          git checkout -b $BRANCH_NAME
+          git push --set-upstream origin $BRANCH_NAME
+
+          large_file="$(mktemp temp-random-file-XXXXXX)"
+          # generate a file with 2.5MB of As
+          yes A | head -c 2500000 > "$large_file"
+
+          for i in {1..10}
+          do
+              cp "$large_file" "test-file$i.txt"
+              echo "test-file$i.txt size: $(stat -c '%s' test-file$i.txt)"
+          done
+
+          # remove the temp file as we don't want to commit it
+          rm "$large_file"
+
+          git add .
+
+          git status --porcelain=v2 --branch --untracked-files=no
+
+          echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+      - uses: ./
+        id: test-action
+        with:
+          token: ${{ github.token }}
+          stage-all-files: false
+          commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Delete test branch
+        run: |
+          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Check output
+        run: |
+          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+
+          if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
+            echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
+            exit 1
+          fi
+
+          if [[ "$changedFilesIfAvailable" -ne 10 ]]; then
+            echo "Error: changedFilesIfAvailable is expected to be 10 but got $changedFilesIfAvailable."
+            exit 1
+          fi
+
+          echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
+        
   test-file-rename: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:

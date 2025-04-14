@@ -110,10 +110,15 @@ runs:
         done <<< "$status_output"
         echo ""
 
+        contents_dir="$(mktemp -d)"
+        echo "contents_dir=$contents_dir" >> $GITHUB_OUTPUT
+
         additions=""
         for filepath in "${staged_additions[@]}"; do
-          file_content=$(cat "$filepath" | base64 | tr -d '\n') # Encode file content in Base64
-          additions+=" -F \"fileAdditions[][path]=$filepath\" -F \"fileAdditions[][contents]=$file_content\" "
+          contents_file="$(mktemp --tmpdir=$contents_dir temp-file-XXXXXX)"
+          cat "$filepath" | base64 | tr -d '\n' > "$contents_file" # Encode file content in Base64
+
+          additions+=" -F \"fileAdditions[][path]=$filepath\" -F \"fileAdditions[][contents]=@$contents_file\" "
         done
       
         deletions=""
@@ -185,5 +190,8 @@ runs:
         
         response=$(gh api graphql -F "expectedHeadOid=$head_oid" ${{ steps.additions-and-deletions.outputs.additions }} ${{ steps.additions-and-deletions.outputs.deletions }} -F "query=$graphql_query")
         echo "commit_response=$response" >> $GITHUB_OUTPUT
+
+        # Clean up temporary files
+        rm -rf "${{ steps.additions-and-deletions.outputs.contents_dir }}"
       env:
         GH_TOKEN: ${{ inputs.token }}
