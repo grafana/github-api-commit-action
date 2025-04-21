@@ -6,7 +6,20 @@
       "bump-minor-pre-major": false,
       "bump-patch-for-minor-pre-major": false,
       "draft": false,
-      "prerelease": false
+      "prerelease": false,
+      "changelog-sections": [
+        { "type":"feat", "section": "🚀 Features" },
+        { "type":"feature", "section": "🚀 Features" },
+        { "type":"fix", "section": "🐛 Bug Fixes" },
+        { "type":"doc", "section": "📚 Documentation"},
+        { "type":"docs", "section": "📚 Documentation" },
+        { "type":"perf", "section": "⚡ Performance" },
+        { "type":"refactor", "section": "🚜 Refactor" },
+        { "type":"style", "section": "🎨 Styling" },
+        { "type":"test", "section": "🧪 Testing" },
+        { "type":"chore", "section": "⚙️ Miscellaneous Tasks" },
+        { "type":"deps", "section": "📦 Dependency Updates" }
+      ]
     }
   },
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
