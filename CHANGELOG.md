@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/grafana/github-api-commit-action/compare/v0.4.0...v0.4.1) (2025-04-21)
+
+
+### 📚 Documentation
+
+* **README:** add releases section to README template ([#93](https://github.com/grafana/github-api-commit-action/issues/93)) ([80353e9](https://github.com/grafana/github-api-commit-action/commit/80353e98320a5165a7d134e55868d29c210bf87e))
+
 ## [0.4.0](https://github.com/grafana/github-api-commit-action/compare/v0.3.1...v0.4.0) (2025-04-21)
 
 
