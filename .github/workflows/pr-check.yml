@@ -1,0 +1,20 @@
+name: Check PR
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - edited
+      - synchronize
+
+jobs:
+  pr-title:
+    runs-on: ubuntu-latest
+    name: Check PR Title
+    steps:
+      - name: Check PR Title
+        uses: agenthunt/conventional-commit-checker-action@9e552d650d0e205553ec7792d447929fc78e012b # v2.0.0
+        with:
+          pr-title-regex: "^(build|chore|ci|deps|docs|feat|fix|perf|refactor|style|test)(\\(.+\\))?(!)?:\\s.*"
+          pr-body-regex: ".*" # We don't really care what the PR body description contains, just the title
