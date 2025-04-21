@@ -27,11 +27,6 @@
 * **deps:** bump actions/create-github-app-token from 1 to 2 ([#79](https://github.com/grafana/github-api-commit-action/issues/79)) ([412b51b](https://github.com/grafana/github-api-commit-action/commit/412b51bdf2e89caaf37e5b53b8fbc8a4c1c1c412))
 * **deps:** bump grafana/github-api-commit-action from 0.3.0 to 0.3.1 ([#65](https://github.com/grafana/github-api-commit-action/issues/65)) ([cdc46bd](https://github.com/grafana/github-api-commit-action/commit/cdc46bd6d01c95fecdf1cf2acb3106478518d17e))
 * trigger tests via workflow call, dispatch or push to main ([#75](https://github.com/grafana/github-api-commit-action/issues/75)) ([f72ba3b](https://github.com/grafana/github-api-commit-action/commit/f72ba3ba7d3a7def86ad1d8b5e7706912494e4c1))
-* update changelog [bot] ([#69](https://github.com/grafana/github-api-commit-action/issues/69)) ([baa0805](https://github.com/grafana/github-api-commit-action/commit/baa08050b07ba580a957460f3a47571b532104d1))
-* update changelog [bot] ([#73](https://github.com/grafana/github-api-commit-action/issues/73)) ([d2aa611](https://github.com/grafana/github-api-commit-action/commit/d2aa611fb71930eac89a03b57fb6a5925fdc9e88))
-* update changelog [bot] ([#76](https://github.com/grafana/github-api-commit-action/issues/76)) ([51f759d](https://github.com/grafana/github-api-commit-action/commit/51f759dc563fe727e31d8b183a917207f3e25bad))
-* update changelog [bot] ([#78](https://github.com/grafana/github-api-commit-action/issues/78)) ([96733db](https://github.com/grafana/github-api-commit-action/commit/96733dbe1bdc6d58423ecbdea0ac53a5294ceb69))
-* update changelog [bot] ([#82](https://github.com/grafana/github-api-commit-action/issues/82)) ([ea14ad7](https://github.com/grafana/github-api-commit-action/commit/ea14ad7e3ff35d44fab125728092bd88e2c1a313))
 
 ## [0.3.1] - 2025-02-13
 
@@ -44,7 +39,6 @@
 
 - Update commit hash in readme; add test for delete (#58)
 - Add auto update and merge workflows (#60)
-- Update changelog [bot] (#62)
 
 ## [0.3.0] - 2025-02-10
 
