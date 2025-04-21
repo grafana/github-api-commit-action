@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.4.0](https://github.com/grafana/github-api-commit-action/compare/v0.3.1...v0.4.0) (2025-04-21)
+
+
+### Features
+
+* improve support for larger commits ([cae2afb](https://github.com/grafana/github-api-commit-action/commit/cae2afb911661e78ed33f4a07d17b6ad105b2ac4))
+
+
+### Bug Fixes
+
+* support no changes ([#67](https://github.com/grafana/github-api-commit-action/issues/67)) ([665f5a0](https://github.com/grafana/github-api-commit-action/commit/665f5a07397c8574da8babb275bc27bf4fd542c0))
+* test workflow use default checkout ref for pull request ([#68](https://github.com/grafana/github-api-commit-action/issues/68)) ([ee8e5db](https://github.com/grafana/github-api-commit-action/commit/ee8e5db2746fd53945d81daeee489265d6cdc238))
+
+## Changelog
+
 This changelog is automatically generated. Do not edit manually!
 
 ## Unreleased
