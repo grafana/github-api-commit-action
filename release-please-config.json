@@ -17,7 +17,6 @@
         { "type":"refactor", "section": "🚜 Refactor" },
         { "type":"style", "section": "🎨 Styling" },
         { "type":"test", "section": "🧪 Testing" },
-        { "type":"chore", "section": "⚙️ Miscellaneous Tasks" },
         { "type":"deps", "section": "📦 Dependency Updates" }
       ]
     }
