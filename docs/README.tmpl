@@ -44,6 +44,37 @@ instance, if you create a branch via `git checkout -b my-test-branch` in one of 
       token: ${{ steps.get_installation_token.outputs.token }} # Token you want to authenticate with
 ```
 
+## Releases
+
+This repository uses [release-please](https://github.com/googleapis/release-please) to automate version management and
+package releasing. Release-please automatically:
+
+- Creates and maintains a release PR
+- Updates the version in package files based on [Conventional Commits](https://www.conventionalcommits.org/)
+- Maintains the CHANGELOG.md file
+- Creates GitHub releases when the release PR is merged
+
+The release process is completely automated - when commits are pushed to the main branch, release-please will:
+1. Analyze the commits since the last release
+2. Update the version number according to semantic versioning rules
+3. Update the CHANGELOG.md with the commit details
+4. Create or update a release PR
+5. When the release PR is merged, create a new GitHub release with appropriate tags
+
+### Commit Convention
+
+To ensure proper versioning and changelog generation, commits should follow the Conventional Commits specification:
+
+- `feat:` for new features (minor version bump)
+- `fix:` for bug fixes (patch version bump)
+- `feat!:` or `fix!:` for breaking changes (major version bump)
+- `chore:`, `docs:`, `test:`, etc. for other types of changes
+
+Example: `feat: add new commit signing feature`
+
+Since we use the `squash-merge` strategy, PR titles are required to be in Conventional Commits format to ensure that the
+merge commit message is defaulted correctly.
+
 # (Legacy) GitHub Api Commit
 
 > [!NOTE]
