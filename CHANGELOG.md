@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.4.1](https://github.com/grafana/github-api-commit-action/compare/v0.4.0...v0.4.1) (2025-04-21)
+
+
+### ⚙️ Miscellaneous Tasks
+
+* **deps:** bump grafana/github-api-commit-action from 0.3.1 to 0.4.0 ([#90](https://github.com/grafana/github-api-commit-action/issues/90)) ([226faf7](https://github.com/grafana/github-api-commit-action/commit/226faf738f413634818ca1a25ae40988f2131849))
+* **deps:** bump softprops/action-gh-release from 2.2.1 to 2.2.2 ([#88](https://github.com/grafana/github-api-commit-action/issues/88)) ([b4f2bfb](https://github.com/grafana/github-api-commit-action/commit/b4f2bfb8a675190cc5ba335b976a3305da1a275e))
+* **workflows:** make release-please update major and major.minor tags ([#89](https://github.com/grafana/github-api-commit-action/issues/89)) ([99b8686](https://github.com/grafana/github-api-commit-action/commit/99b86863ad9aebe2538a2f17cc6982eac9aa4c1d))
+
 ## [0.4.0](https://github.com/grafana/github-api-commit-action/compare/v0.3.1...v0.4.0) (2025-04-21)
 
 
