@@ -10,7 +10,7 @@ on:
 
 jobs:
   pr-title:
-    runs-on: ubuntu-x64
+    runs-on: ubuntu-latest
     name: Check PR Title
     steps:
       - name: Check PR Title
@@ -18,18 +18,3 @@ jobs:
         with:
           pr-title-regex: "^(build|chore|ci|deps|docs|feat|fix|perf|refactor|style|test)(\\(.+\\))?(!)?:\\s.*"
           pr-body-regex: ".*" # We don't really care what the PR body description contains, just the title
-
-  label:
-    permissions:
-      contents: read
-      issues: read
-      pull-requests: write
-    if: github.actor != 'dependabot[bot]' # dependabot adds it's own labels
-    runs-on: ubuntu-x64
-    name: Update PR Labels
-    needs: ['pr-title'] # Makes sure that the title follows conventional commits
-    steps:
-      - name: Label PR
-        uses: grafana/pr-labeler-action@50737759cb150f5d312de1a45559027156db8bab # v0.1.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
