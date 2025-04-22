@@ -4,11 +4,11 @@
 
 # GitHub Api Commit
 
-This action commits to the checked out repo via the graphql mutation `createCommitOnBranch`. This mutation supports
+This action commits to the checked-out repo via the graphql mutation `createCommitOnBranch`. This mutation supports
 signing commits automatically for the user. This is useful when using a GitHub App to do committing for bot-related
-commits and the repo requires signed commits.
+ commits, and the repo requires signed commits.
 
-It will build a list of file additions and deletions to commit, and just prior to committing will fetch the latest
+It will build a list of file additions and deletions to commit, and just before committing will fetch the latest
 commit OID from the remote repo. It will commit to whatever branch is currently checked out in the workflow. For
 instance, if you create a branch via `git checkout -b my-test-branch` in one of your steps, it will commit to 
 `my-test-branch`.
@@ -74,6 +74,10 @@ Example: `feat: add new commit signing feature`
 
 Since we use the `squash-merge` strategy, PR titles are required to be in Conventional Commits format to ensure that the
 merge commit message is defaulted correctly.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
 
 # (Legacy) GitHub Api Commit
 
