@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/grafana/github-api-commit-action/compare/v0.4.1...v0.4.2) (2025-04-22)
+
+
+### 📚 Documentation
+
+* **CONTRIBUTING:** add contribution guide ([#99](https://github.com/grafana/github-api-commit-action/issues/99)) ([6bdf8f1](https://github.com/grafana/github-api-commit-action/commit/6bdf8f1cb22d95f48887e9ea05a7010f8d2bbc25))
+
 ## [0.4.1](https://github.com/grafana/github-api-commit-action/compare/v0.4.0...v0.4.1) (2025-04-21)
 
 
