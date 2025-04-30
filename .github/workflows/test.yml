@@ -72,6 +72,7 @@ jobs:
           echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
         env:
           RESPONSE: ${{ steps.test-action.outputs.commit-response }}
+
   test-branch-not-on-remote: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     permissions:
@@ -110,7 +111,7 @@ jobs:
           TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
         run: |
-          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+          changedFilesIfAvailable=$(echo ${RESPONSE} | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
 
           if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
             echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
@@ -123,6 +124,8 @@ jobs:
           fi
 
           echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
+        env:
+          RESPONSE: ${{ steps.test-action.outputs.commit-response }}
   test-not-stage-all-files:
     runs-on: ubuntu-latest
     permissions:
@@ -165,7 +168,7 @@ jobs:
           TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
         run: |
-          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+          changedFilesIfAvailable=$(echo ${RESPONSE} | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
 
           if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
             echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
@@ -178,6 +181,8 @@ jobs:
           fi
 
           echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
+        env:
+          RESPONSE: ${{ steps.test-action.outputs.commit-response }}
   test-stage-all-files:
     runs-on: ubuntu-latest
     permissions:
@@ -220,7 +225,7 @@ jobs:
           TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
         run: |
-          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+          changedFilesIfAvailable=$(echo ${RESPONSE} | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
 
           if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
             echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
@@ -233,6 +238,8 @@ jobs:
           fi
 
           echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
+        env:
+          RESPONSE: ${{ steps.test-action.outputs.commit-response }}
 
   test-multiple-files:
     runs-on: ubuntu-latest
@@ -287,7 +294,7 @@ jobs:
           TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
         run: |
-          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+          changedFilesIfAvailable=$(echo ${RESPONSE} | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
 
           if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
             echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
@@ -300,6 +307,8 @@ jobs:
           fi
 
           echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
+        env:
+          RESPONSE: ${{ steps.test-action.outputs.commit-response }}
 
   test-very-large-file:
     runs-on: ubuntu-latest
@@ -337,11 +346,14 @@ jobs:
           stage-all-files: false
           commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Delete test branch
+        if: ${{ always() }}
         run: |
-          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+          git push --force --delete origin "${TO_DELETE}"
+        env:
+          TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
         run: |
-          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+          changedFilesIfAvailable=$(echo ${RESPONSE} | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
 
           if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
             echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
@@ -354,6 +366,8 @@ jobs:
           fi
 
           echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
+        env:
+          RESPONSE: ${{ steps.test-action.outputs.commit-response }}
 
   test-multiple-large-files:
     runs-on: ubuntu-latest
@@ -400,11 +414,14 @@ jobs:
           stage-all-files: false
           commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Delete test branch
+        if: ${{ always() }}
         run: |
-          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+          git push --force --delete origin "${TO_DELETE}"
+        env:
+          TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
         run: |
-          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+          changedFilesIfAvailable=$(echo ${RESPONSE} | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
 
           if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
             echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
@@ -417,6 +434,8 @@ jobs:
           fi
 
           echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
+        env:
+          RESPONSE: ${{ steps.test-action.outputs.commit-response }}
         
   test-file-rename: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
@@ -459,7 +478,7 @@ jobs:
           TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
         run: |
-          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+          changedFilesIfAvailable=$(echo ${RESPONSE} | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
 
           if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
             echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
@@ -472,6 +491,8 @@ jobs:
           fi
 
           echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
+        env:
+          RESPONSE: ${{ steps.test-action.outputs.commit-response }}
 
   test-modify-file: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
@@ -515,7 +536,7 @@ jobs:
           TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
         run: |
-          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+          changedFilesIfAvailable=$(echo ${RESPONSE} | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
 
           if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
             echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
@@ -528,6 +549,8 @@ jobs:
           fi
 
           echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
+        env:
+          RESPONSE: ${{ steps.test-action.outputs.commit-response }}
   test-delete-file: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     permissions:
@@ -570,7 +593,7 @@ jobs:
           TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
         run: |
-          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+          changedFilesIfAvailable=$(echo ${RESPONSE} | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
 
           if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
             echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
@@ -583,6 +606,8 @@ jobs:
           fi
 
           echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
+        env:
+          RESPONSE: ${{ steps.test-action.outputs.commit-response }}
   test-token-url: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     permissions:
@@ -599,7 +624,7 @@ jobs:
 
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git config --global url.https://x-access-token:${{ inputs.token }}@github.com/.insteadOf https://github.com/
+          git config --global url.https://x-access-token:${{ github.token }}@github.com/.insteadOf https://github.com/
 
           git checkout -b $BRANCH_NAME
           git push --set-upstream origin $BRANCH_NAME
@@ -622,7 +647,7 @@ jobs:
           TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
         run: |
-          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+          changedFilesIfAvailable=$(echo ${RESPONSE} | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
 
           if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
             echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
@@ -635,6 +660,8 @@ jobs:
           fi
 
           echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
+        env:
+          RESPONSE: ${{ steps.test-action.outputs.commit-response }}
 
   test-fail-if-no-changes: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
@@ -669,12 +696,14 @@ jobs:
       - name: Check output is failure
         if: ${{ steps.test-action.outcome == 'failure' }}
         run: |
-          if [[ -z "${{ steps.test-action.outputs.commit-response }}" ]]; then
+          if [[ -z "${RESPONSE}" ]]; then
             echo "Validation passed: commit-response is empty."
           else
             echo "Error: commit-response is expected to be empty but got not empty."
             exit 1
           fi
+        env:
+          RESPONSE: ${{ steps.test-action.outputs.commit-response }}
       - name: Check output is success
         if: ${{ steps.test-action.outcome == 'success' }}
         run: |
@@ -726,12 +755,14 @@ jobs:
       - name: Check output is success
         if: ${{ steps.test-action.outcome == 'success' }}
         run: |
-          if [[ -z "${{ steps.test-action.outputs.commit-response }}" ]]; then
+          if [[ -z "${RESPONSE}" ]]; then
             echo "Validation passed: commit-response is empty."
           else
             echo "Error: commit-response is expected to be empty but got not empty."
             exit 1
           fi
+        env:
+          RESPONSE: ${{ steps.test-action.outputs.commit-response }}
       - name: Delete test branch
         if: ${{ always() }}
         run: |

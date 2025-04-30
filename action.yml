@@ -59,10 +59,12 @@ runs:
       if: inputs.create-branch-on-remote == 'true'
       shell: bash
       run: |
-        onRemote=$(git ls-remote --heads origin ${{ steps.commit-context.outputs.branch }})
+        onRemote=$(git ls-remote --heads origin ${BRANCH})
         if [[ -z "$onRemote" ]]; then
-          git push --set-upstream origin ${{ steps.commit-context.outputs.branch }}
+          git push --set-upstream origin ${BRANCH}
         fi
+      env:
+        BRANCH: ${{ steps.commit-context.outputs.branch }}
 
     - name: Get file additions and deletions
       id: additions-and-deletions
@@ -130,7 +132,7 @@ runs:
           echo "No changes to commit"
           echo "any_changed=false"  >> $GITHUB_OUTPUT
 
-          if [[ "${{ inputs.success-if-no-changes }}" == "true" ]]; then
+          if [[ "${SUCCESS_IF_NO_CHANGES}" == "true" ]]; then
             exit 0
           else
             exit 1
@@ -149,6 +151,8 @@ runs:
         echo "any_changed=true"  >> $GITHUB_OUTPUT
         echo "additions=$additions" >> $GITHUB_OUTPUT
         echo "deletions=$deletions" >> $GITHUB_OUTPUT
+      env:
+        SUCCESS_IF_NO_CHANGES: ${{ inputs.success-if-no-changes }}
 
     - name: Commit changes
       if: ${{ steps.additions-and-deletions.outputs.any_changed == 'true' }}
@@ -156,7 +160,7 @@ runs:
       id: commit-changes
       run: |
         
-        branch_oid=$(git ls-remote origin refs/heads/${{ steps.commit-context.outputs.branch }} | awk '{ print $1 }')
+        branch_oid=$(git ls-remote origin refs/heads/${BRANCH} | awk '{ print $1 }')
         
         if [ -n "$branch_oid" ]; then
           head_oid=$branch_oid # Use remote OID of the current branch
@@ -168,10 +172,10 @@ runs:
           createCommitOnBranch( 
             input: { 
               branch: { 
-                repositoryNameWithOwner: "${{ steps.commit-context.outputs.repo }}", 
-                branchName: "${{ steps.commit-context.outputs.branch }}" 
+                repositoryNameWithOwner: "${REPO}", 
+                branchName: "${BRANCH}" 
               }, 
-              message: { headline: "${{ inputs.commit-message }}" }, 
+              message: { headline: "${COMMIT_MESSAGE}" }, 
               fileChanges: { 
                 additions: $fileAdditions, 
                 deletions: $fileDeletions 
@@ -188,10 +192,16 @@ runs:
         
         echo $graphql_query
         
-        response=$(gh api graphql -F "expectedHeadOid=$head_oid" ${{ steps.additions-and-deletions.outputs.additions }} ${{ steps.additions-and-deletions.outputs.deletions }} -F "query=$graphql_query")
+        response=$(gh api graphql -F "expectedHeadOid=$head_oid" ${ADDITIONS} ${DELETIONS} -F "query=$graphql_query")
         echo "commit_response=$response" >> $GITHUB_OUTPUT
 
         # Clean up temporary files
-        rm -rf "${{ steps.additions-and-deletions.outputs.contents_dir }}"
+        rm -rf "${TEMP_CONTENTS_DIR}"
       env:
         GH_TOKEN: ${{ inputs.token }}
+        BRANCH: ${{ steps.commit-context.outputs.branch }}
+        REPO: ${{ steps.commit-context.outputs.repo }}
+        COMMIT_MESSAGE: ${{ inputs.commit-message }}
+        ADDITIONS: ${{ steps.additions-and-deletions.outputs.additions }}
+        DELETIONS: ${{ steps.additions-and-deletions.outputs.deletions }}
+        TEMP_CONTENTS_DIR: ${{ steps.additions-and-deletions.outputs.contents_dir }}
