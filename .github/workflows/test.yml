@@ -20,10 +20,13 @@ env:
 jobs:
   test-branch-on-remote: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ env.CHECKOUT_REF }}
+          persist-credentials: true
 
       - name: Setup test branch
         id: setup-test-branch
@@ -49,10 +52,12 @@ jobs:
       - name: Delete test branch
         if: ${{ always() }}
         run: |
-          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+          git push --force --delete origin "${TO_DELETE}"
+        env:
+          TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
         run: |
-          changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+          changedFilesIfAvailable=$(echo ${RESPONSE} | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
 
           if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
             echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
@@ -65,13 +70,17 @@ jobs:
           fi
 
           echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
-
+        env:
+          RESPONSE: ${{ steps.test-action.outputs.commit-response }}
   test-branch-not-on-remote: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ env.CHECKOUT_REF }}
+          persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
         run: |
@@ -96,7 +105,9 @@ jobs:
       - name: Delete test branch
         if: ${{ always() }}
         run: |
-          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+          git push --force --delete origin "${TO_DELETE}"
+        env:
+          TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
         run: |
           changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
@@ -114,10 +125,13 @@ jobs:
           echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
   test-not-stage-all-files:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ env.CHECKOUT_REF }}
+          persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
         run: |
@@ -146,7 +160,9 @@ jobs:
       - name: Delete test branch
         if: ${{ always() }}
         run: |
-          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+          git push --force --delete origin "${TO_DELETE}"
+        env:
+          TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
         run: |
           changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
@@ -164,10 +180,13 @@ jobs:
           echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
   test-stage-all-files:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ env.CHECKOUT_REF }}
+          persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
         run: |
@@ -196,7 +215,9 @@ jobs:
       - name: Delete test branch
         if: ${{ always() }}
         run: |
-          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+          git push --force --delete origin "${TO_DELETE}"
+        env:
+          TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
         run: |
           changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
@@ -215,10 +236,13 @@ jobs:
 
   test-multiple-files:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ env.CHECKOUT_REF }}
+          persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
         run: |
@@ -258,7 +282,9 @@ jobs:
       - name: Delete test branch
         if: ${{ always() }}
         run: |
-          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+          git push --force --delete origin "${TO_DELETE}"
+        env:
+          TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
         run: |
           changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
@@ -277,10 +303,13 @@ jobs:
 
   test-very-large-file:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ env.CHECKOUT_REF }}
+          persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
         run: |
@@ -328,10 +357,13 @@ jobs:
 
   test-multiple-large-files:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ env.CHECKOUT_REF }}
+          persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
         run: |
@@ -388,10 +420,13 @@ jobs:
         
   test-file-rename: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ env.CHECKOUT_REF }}
+          persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
         run: |
@@ -419,7 +454,9 @@ jobs:
       - name: Delete test branch
         if: ${{ always() }}
         run: |
-          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+          git push --force --delete origin "${TO_DELETE}"
+        env:
+          TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
         run: |
           changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
@@ -438,10 +475,13 @@ jobs:
 
   test-modify-file: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ env.CHECKOUT_REF }}
+          persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
         run: |
@@ -470,7 +510,9 @@ jobs:
       - name: Delete test branch
         if: ${{ always() }}
         run: |
-          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+          git push --force --delete origin "${TO_DELETE}"
+        env:
+          TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
         run: |
           changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
@@ -488,10 +530,13 @@ jobs:
           echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
   test-delete-file: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ env.CHECKOUT_REF }}
+          persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
         run: |
@@ -520,7 +565,9 @@ jobs:
       - name: Delete test branch
         if: ${{ always() }}
         run: |
-          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+          git push --force --delete origin "${TO_DELETE}"
+        env:
+          TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
         run: |
           changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
@@ -538,10 +585,13 @@ jobs:
           echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
   test-token-url: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ env.CHECKOUT_REF }}
+          persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
         run: |
@@ -567,7 +617,9 @@ jobs:
       - name: Delete test branch
         if: ${{ always() }}
         run: |
-          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+          git push --force --delete origin "${TO_DELETE}"
+        env:
+          TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
       - name: Check output
         run: |
           changedFilesIfAvailable=$(echo '${{ steps.test-action.outputs.commit-response }}' | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
@@ -586,8 +638,13 @@ jobs:
 
   test-fail-if-no-changes: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ env.CHECKOUT_REF }}
+          persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
         run: |
@@ -626,12 +683,19 @@ jobs:
       - name: Delete test branch
         if: ${{ always() }}
         run: |
-          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+          git push --force --delete origin "${TO_DELETE}"
+        env:
+          TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
       
   test-success-if-no-changes: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ env.CHECKOUT_REF }}
+          persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
         run: |
@@ -671,4 +735,6 @@ jobs:
       - name: Delete test branch
         if: ${{ always() }}
         run: |
-          git push --force --delete origin ${{ steps.setup-test-branch.outputs.branch-name }}
+          git push --force --delete origin "${TO_DELETE}"
+        env:
+          TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}

@@ -10,6 +10,7 @@ jobs:
     name: Run tests
     if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     uses: ./.github/workflows/test.yml
-    secrets: inherit
+    permissions:
+      contents: write
     with:
       branch_ref: ${{ github.ref }}
