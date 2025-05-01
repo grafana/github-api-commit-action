@@ -159,7 +159,10 @@ runs:
       shell: bash
       id: commit-changes
       run: |
-        ls -la $TEMP_CONTENTS_DIR
+        echo "additions: [${ADDITIONS}]"
+        echo "deletions: [${DELETIONS}]"
+        
+        
         branch_oid=$(git ls-remote origin refs/heads/${BRANCH} | awk '{ print $1 }')
         
         if [ -n "$branch_oid" ]; then
@@ -200,13 +203,13 @@ runs:
         
         echo $graphql_query
         
-        response=$(gh api graphql -F "repo=${REPO}" -F "branch=${BRANCH}" -F "commitMessage=${COMMIT_MESSAGE}" -F "expectedHeadOid=$head_oid" ${{ steps.additions-and-deletions.outputs.additions }} ${DELETIONS} -F "query=$graphql_query")
+        response=$(gh api graphql -F "repo=${REPO}" -F "branch=${BRANCH}" -F "commitMessage=${COMMIT_MESSAGE}" -F "expectedHeadOid=$head_oid" ${{ steps.additions-and-deletions.outputs.additions }} ${{ steps.additions-and-deletions.outputs.deletions }} -F "query=$graphql_query")
         echo "commit_response=$response" >> $GITHUB_OUTPUT
       env:
         GH_TOKEN: ${{ inputs.token }}
         BRANCH: ${{ steps.commit-context.outputs.branch }}
         REPO: ${{ steps.commit-context.outputs.repo }}
-        COMMIT_MESSAGE: ${{ inputs.commit-message }}
         ADDITIONS: ${{ steps.additions-and-deletions.outputs.additions }}
         DELETIONS: ${{ steps.additions-and-deletions.outputs.deletions }}
+        COMMIT_MESSAGE: ${{ inputs.commit-message }}
         TEMP_CONTENTS_DIR: ${{ steps.additions-and-deletions.outputs.contents_dir }}
