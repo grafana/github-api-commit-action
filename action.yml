@@ -159,10 +159,6 @@ runs:
       shell: bash
       id: commit-changes
       run: |
-        echo "additions: [${ADDITIONS}]"
-        echo "deletions: [${DELETIONS}]"
-        
-        
         branch_oid=$(git ls-remote origin refs/heads/${BRANCH} | awk '{ print $1 }')
         
         if [ -n "$branch_oid" ]; then
@@ -209,7 +205,5 @@ runs:
         GH_TOKEN: ${{ inputs.token }}
         BRANCH: ${{ steps.commit-context.outputs.branch }}
         REPO: ${{ steps.commit-context.outputs.repo }}
-        ADDITIONS: ${{ steps.additions-and-deletions.outputs.additions }}
-        DELETIONS: ${{ steps.additions-and-deletions.outputs.deletions }}
         COMMIT_MESSAGE: ${{ inputs.commit-message }}
         TEMP_CONTENTS_DIR: ${{ steps.additions-and-deletions.outputs.contents_dir }}
