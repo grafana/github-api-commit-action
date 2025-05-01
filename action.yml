@@ -159,6 +159,7 @@ runs:
       shell: bash
       id: commit-changes
       run: |
+        ls -la $TEMP_CONTENTS_DIR
         branch_oid=$(git ls-remote origin refs/heads/${BRANCH} | awk '{ print $1 }')
         
         if [ -n "$branch_oid" ]; then
