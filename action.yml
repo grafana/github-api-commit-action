@@ -112,7 +112,7 @@ runs:
         done <<< "$status_output"
         echo ""
 
-        contents_dir="$(mktemp -d -p $PWD)"
+        contents_dir="$(mktemp -d -p $RUNNER_TEMP)"
         echo "contents_dir=$contents_dir" >> $GITHUB_OUTPUT
 
         additions=""
