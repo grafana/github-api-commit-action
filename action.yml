@@ -168,14 +168,20 @@ runs:
           head_oid=$(git ls-remote origin HEAD | awk '{ print $1 }') # Fallback to HEAD
         fi
   
-        graphql_query='mutation($expectedHeadOid: GitObjectID!, $fileAdditions: [FileAddition!]!, $fileDeletions: [FileDeletion!]!) {
+        graphql_query='mutation(
+            $repo: String!, 
+            $branch: String!, 
+            $commitMessage: String!, 
+            $expectedHeadOid: GitObjectID!, 
+            $fileAdditions: [FileAddition!]!, 
+            $fileDeletions: [FileDeletion!]!) {
           createCommitOnBranch( 
             input: { 
               branch: { 
-                repositoryNameWithOwner: "${REPO}", 
-                branchName: "${BRANCH}" 
+                repositoryNameWithOwner: $repo, 
+                branchName: $branch 
               }, 
-              message: { headline: "${COMMIT_MESSAGE}" }, 
+              message: { headline: $commitMessage }, 
               fileChanges: { 
                 additions: $fileAdditions, 
                 deletions: $fileDeletions 
@@ -192,7 +198,7 @@ runs:
         
         echo $graphql_query
         
-        response=$(gh api graphql -F "expectedHeadOid=$head_oid" ${ADDITIONS} ${DELETIONS} -F "query=$graphql_query")
+        response=$(gh api graphql -F "repo=${REPO}" -F "branch=${BRANCH}" -F "commitMessage=${COMMIT_MESSAGE}" -F "expectedHeadOid=$head_oid" ${ADDITIONS} ${DELETIONS} -F "query=$graphql_query")
         echo "commit_response=$response" >> $GITHUB_OUTPUT
 
         # Clean up temporary files
