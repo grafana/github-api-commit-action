@@ -34,22 +34,26 @@ jobs:
         with:
           ref: 'main'
           fetch-depth: 0
+          persist-credentials: true
       - name: Tag major and minor versions
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           
           # Delete old major and minor tag
-          git tag -d v${{ needs.release-please.outputs.major }} || true
-          git tag -d v${{ needs.release-please.outputs.major }}.${{ needs.release-please.outputs.minor }} || true
-          git push origin :v${{ needs.release-please.outputs.major }} || true
-          git push origin :v${{ needs.release-please.outputs.major }}.${{ needs.release-please.outputs.minor }} || true
+          git tag -d v${MAJOR} || true
+          git tag -d v${MAJOR}.${MINOR} || true
+          git push origin :v${MAJOR} || true
+          git push origin :v${MAJOR}.${MINOR} || true
           
           # Create new major and minor tag
-          git tag -a v${{ needs.release-please.outputs.major }} -m "Release v${{ needs.release-please.outputs.major }}"
-          git tag -a v${{ needs.release-please.outputs.major }}.${{ needs.release-please.outputs.minor }} -m "Release v${{ needs.release-please.outputs.major }}.${{ needs.release-please.outputs.minor }}"
-          git push origin v${{ needs.release-please.outputs.major }}
-          git push origin v${{ needs.release-please.outputs.major }}.${{ needs.release-please.outputs.minor }}
+          git tag -a v${MAJOR} -m "Release v${MAJOR}"
+          git tag -a v${MAJOR}.${MINOR} -m "Release v${MAJOR}.${MINOR}"
+          git push origin v${MAJOR}
+          git push origin v${MAJOR}.${MINOR}
+        env:
+          MAJOR: ${{ needs.release-please.outputs.major }}
+          MINOR: ${{ needs.release-please.outputs.minor }}
   update-readme:
     runs-on: ubuntu-latest
     if: ${{ needs.release-please.outputs.release_created }}
@@ -63,9 +67,10 @@ jobs:
         with:
           ref: 'main'
           fetch-depth: 0
+          persist-credentials: true
 
       - id: get-secrets
-        uses: grafana/shared-workflows/actions/get-vault-secrets@main
+        uses: grafana/shared-workflows/actions/get-vault-secrets@28361cdb22223e5f1e34358c86c20908e7248760 # get-vault-secrets-v1.1.0
         with:
           repo_secrets: |
             GITHUB_APP_ID=helper-bot:app-id
@@ -79,18 +84,24 @@ jobs:
 
       - name: Get GitHub App User ID
         id: get-user-id
-        run: echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+        run: echo "user-id=$(gh api "/users/${APP_SLUG}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
       - run: |
-          git config --global user.name '${{ steps.app-token.outputs.app-slug }}[bot]'
-          git config --global user.email '${{ steps.get-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com'
+          git config --global user.name "${APP_SLUG}[bot]"
+          git config --global user.email "${USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
+        env:
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          USER_ID: ${{ steps.get-user-id.outputs.user-id }}
 
       - name: Update readme
         run: |
-          git checkout -b helper-bot/readme-${{ needs.release-please.outputs.tag_name }}
-          TAG_HASH="$(git rev-parse ${{ needs.release-please.outputs.tag_name }})" TAG="${{ needs.release-please.outputs.tag_name }}" envsubst < ./docs/README.tmpl > ./README.md
+          git checkout -b helper-bot/readme-${TAG_NAME}
+          TAG_HASH="$(git rev-parse ${TAG_NAME})" TAG="${TAG_NAME}" envsubst < ./docs/README.tmpl > ./README.md
           git add README.md
+        env:
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
 
       - name: Commit changes
         uses: grafana/github-api-commit-action@db25908818706393572c06ecd63c378e8561314d # v0.4.0
@@ -102,10 +113,11 @@ jobs:
       - name: Create pull request
         id: cpr
         run: |
-          PR_URL=$(gh pr create --title "chore(readme): update readme for ${{ needs.release-please.outputs.tag_name }} [BOT]" --body "PR created automatically through release-please.yml workflow")
+          PR_URL=$(gh pr create --title "chore(readme): update readme for ${TAG_NAME} [BOT]" --body "PR created automatically through release-please.yml workflow")
           echo "PR_URL=$PR_URL" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
 
       - name: Approve and auto-merge
         run: gh pr review --approve "$PR_URL" && gh pr merge --auto --squash "$PR_URL"
