@@ -120,7 +120,7 @@ runs:
           contents_file="$(mktemp --tmpdir=$contents_dir temp-file-XXXXXX)"
           cat "$filepath" | base64 | tr -d '\n' > "$contents_file" # Encode file content in Base64
 
-          additions+=" -F \"fileAdditions[][path]=$filepath\" -F \"fileAdditions[][contents]=@$contents_file\" "
+          additions+=" -F \"fileAdditions[][path]=$filepath\" -F \"fileAdditions[][contents]=\@$contents_file\" "
         done
       
         deletions=""
