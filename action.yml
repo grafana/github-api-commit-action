@@ -162,10 +162,8 @@ runs:
         branch_oid=$(git ls-remote origin refs/heads/${BRANCH} | awk '{ print $1 }')
         
         if [ -n "$branch_oid" ]; then
-          echo "Using branch"
           head_oid=$branch_oid # Use remote OID of the current branch
         else
-          echo "finding branch"
           head_oid=$(git ls-remote origin HEAD | awk '{ print $1 }') # Fallback to HEAD
         fi
   
