@@ -109,3 +109,4 @@ lib/**/*
 !.yarn/versions
 
 ./scripts/
+.secrets

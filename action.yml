@@ -121,6 +121,7 @@ runs:
           cat "$filepath" | base64 | tr -d '\n' > "$contents_file" # Encode file content in Base64
 
           additions+=" -F \"fileAdditions[][path]=$filepath\" -F \"fileAdditions[][contents]=@$contents_file\" "
+          echo "contents_file=$contents_file" >> GITHUB_OUTPUT
         done
       
         deletions=""
@@ -159,12 +160,14 @@ runs:
       shell: bash
       id: commit-changes
       run: |
-        
+        cat ${{ steps.additions-and-deletions.outputs.contents_file }}
         branch_oid=$(git ls-remote origin refs/heads/${BRANCH} | awk '{ print $1 }')
         
         if [ -n "$branch_oid" ]; then
+          echo "Using branch"
           head_oid=$branch_oid # Use remote OID of the current branch
         else
+          echo "finding branch"
           head_oid=$(git ls-remote origin HEAD | awk '{ print $1 }') # Fallback to HEAD
         fi
   
