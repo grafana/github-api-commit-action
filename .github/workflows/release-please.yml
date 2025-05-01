@@ -104,7 +104,7 @@ jobs:
           TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
 
       - name: Commit changes
-        uses: grafana/github-api-commit-action@db25908818706393572c06ecd63c378e8561314d # v0.4.0
+        uses: grafana/github-api-commit-action@4eceeb68aa8b00d6acdf43eef81e2ceea9b432fb # v0.4.2
         with:
           commit-message: 'chore(readme): update readme for ${{ needs.release-please.outputs.tag_name }} [BOT]'
           create-branch-on-remote: 'true'
