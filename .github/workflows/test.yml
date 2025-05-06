@@ -1,21 +1,9 @@
 name: 'Test'
 on:
-  workflow_call:
-    inputs:
-      branch_ref:
-        description: 'Which ref to pull'
-        type: string
-  workflow_dispatch:
-    inputs:
-      branch_ref:
-        description: 'Which ref to pull'
-        type: string
   push:
     branches:
       - main
-
-env:
-  CHECKOUT_REF: ${{ github.event_name == 'push' && github.ref || inputs.branch_ref }}
+  pull_request:
 
 jobs:
   check-not-fork:
@@ -35,7 +23,6 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ env.CHECKOUT_REF }}
           persist-credentials: true
 
       - name: Setup test branch
@@ -91,7 +78,6 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ env.CHECKOUT_REF }}
           persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
@@ -145,7 +131,6 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ env.CHECKOUT_REF }}
           persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
@@ -203,7 +188,6 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ env.CHECKOUT_REF }}
           persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
@@ -262,7 +246,6 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ env.CHECKOUT_REF }}
           persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
@@ -332,7 +315,6 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ env.CHECKOUT_REF }}
           persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
@@ -392,7 +374,6 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ env.CHECKOUT_REF }}
           persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
@@ -461,7 +442,6 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ env.CHECKOUT_REF }}
           persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
@@ -519,7 +499,6 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ env.CHECKOUT_REF }}
           persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
@@ -577,7 +556,6 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ env.CHECKOUT_REF }}
           persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
@@ -635,7 +613,6 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ env.CHECKOUT_REF }}
           persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
@@ -691,7 +668,6 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ env.CHECKOUT_REF }}
           persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
@@ -745,7 +721,6 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ env.CHECKOUT_REF }}
           persist-credentials: true
       - name: Setup test branch
         id: setup-test-branch
