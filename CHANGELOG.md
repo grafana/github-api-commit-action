@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.3](https://github.com/grafana/github-api-commit-action/compare/v0.4.2...v0.4.3) (2025-05-06)
+
+
+### 🧪 Testing
+
+* improve test workflow to reduce boilerplate ([#104](https://github.com/grafana/github-api-commit-action/issues/104)) ([702c057](https://github.com/grafana/github-api-commit-action/commit/702c057668af23a7bbd990f46ee800b1603f41bd))
+
+
+### 📦 Dependency Updates
+
+* **deps:** bump grafana/github-api-commit-action from 0.4.0 to 0.4.2 ([#102](https://github.com/grafana/github-api-commit-action/issues/102)) ([f5788fb](https://github.com/grafana/github-api-commit-action/commit/f5788fbbe894fa820e1ee49d5e9d8e5149f72282))
+
 ## [0.4.2](https://github.com/grafana/github-api-commit-action/compare/v0.4.1...v0.4.2) (2025-04-22)
 
 
