@@ -197,6 +197,7 @@ runs:
         
         echo $graphql_query
         
+        # re: zizmor[template-injection] - Converting to env vars prevents the parameters from being injected into the command correctly
         response=$(gh api graphql -F "repo=${REPO}" -F "branch=${BRANCH}" -F "commitMessage=${COMMIT_MESSAGE}" -F "expectedHeadOid=$head_oid" ${{ steps.additions-and-deletions.outputs.additions }} ${{ steps.additions-and-deletions.outputs.deletions }} -F "query=$graphql_query")
         echo "commit_response=$response" >> $GITHUB_OUTPUT
       env:
