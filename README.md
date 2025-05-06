@@ -99,3 +99,5 @@ An example can be found [here](https://github.com/orgs/community/discussions/500
 
 When committing through the GitHub API using a GitHub App installation token, GitHub will recognize the app and add
 commit signing for you.
+
+test addition
