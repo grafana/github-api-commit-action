@@ -20,7 +20,7 @@ env:
 jobs:
   check-not-fork:
     runs-on: ubuntu-latest
-    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
     permissions: {}
     steps:
       - name: Check if fork
