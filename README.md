@@ -17,7 +17,7 @@ instance, if you create a branch via `git checkout -b my-test-branch` in one of 
 
 ```yaml
   - name: Commit changes
-    uses: grafana/github-api-commit-action@4eceeb68aa8b00d6acdf43eef81e2ceea9b432fb # v0.4.2
+    uses: grafana/github-api-commit-action@4358a03ee8d55bc7b2e1dd0d9e89ab7233ff014b # v0.4.3
     with:
       commit-message: "<commit-message>" # Commit message defaults to "Commit performed by grafana/github-api-commit-action"
       create-branch-on-remote: true | false # Whether to create the branch on the remote if it doesn't exist: Defaults to false
@@ -36,7 +36,7 @@ instance, if you create a branch via `git checkout -b my-test-branch` in one of 
       private_key: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
 
   - name: Commit changes
-    uses: grafana/github-api-commit-action@4eceeb68aa8b00d6acdf43eef81e2ceea9b432fb # v0.4.2
+    uses: grafana/github-api-commit-action@4358a03ee8d55bc7b2e1dd0d9e89ab7233ff014b # v0.4.3
     with:
       commit-message: "<commit-message>" # Commit message defaults to "Commit performed by grafana/github-api-commit-action"
       create-branch-on-remote: true | false # Whether to create the branch on the remote if it doesn't exist already: Defaults to false
