@@ -51,7 +51,7 @@ runs:
 
 # Make sure input token is used for remote git operations
     - name: Inject token into remote url
-      id: git-auth
+      id: config-git-auth
       shell: bash
       run: |
         git remote set-url origin https://x-access-token:${TOKEN}@github.com/${REPO}
@@ -218,7 +218,7 @@ runs:
 
 # Reset the remote url to what was set before calling the action
     - name: Reset remote url
-      id: git-auth
+      id: reset-git-auth
       shell: bash
       run: |
        git remote set-url origin ${REMOTE_URL}
