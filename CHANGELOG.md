@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.0](https://github.com/grafana/github-api-commit-action/compare/v0.4.3...v1.0.0) (2025-05-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* add token to remote URL so remote operations have auth ([#111](https://github.com/grafana/github-api-commit-action/issues/111))
+
+### 🚀 Features
+
+* add token to remote URL so remote operations have auth ([#111](https://github.com/grafana/github-api-commit-action/issues/111)) ([219f96d](https://github.com/grafana/github-api-commit-action/commit/219f96df5c2c646d38463d3a0d18979616448b41))
+
 ## [0.4.3](https://github.com/grafana/github-api-commit-action/compare/v0.4.2...v0.4.3) (2025-05-06)
 
 
