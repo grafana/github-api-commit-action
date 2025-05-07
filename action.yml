@@ -41,14 +41,23 @@ runs:
           OWNER=${BASH_REMATCH[2]}
           REPO=${BASH_REMATCH[3]}
           BRANCH=$(git branch --show-current)
+          echo "remote-url=$REMOTE_URL" >> GITHUB_OUTPUT
           echo "repo=$OWNER/$REPO" >> $GITHUB_OUTPUT
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
         else
           echo "ERROR: Invalid GitHub remote URL"
           exit 1
         fi
+
+# Make sure input token is used for remote git operations
+    - name: Inject token into remote url
+      id: config-git-auth
+      shell: bash
+      run: |
+        git remote set-url origin https://x-access-token:${TOKEN}@github.com/${REPO}
       env:
-        GH_TOKEN: ${{ inputs.token }}
+        REPO: ${{ steps.commit-context.outputs.repo }}
+        TOKEN: ${{ inputs.token }}
 
     - name: Stage all files
       if: inputs.stage-all-files == 'true'
@@ -206,3 +215,12 @@ runs:
         REPO: ${{ steps.commit-context.outputs.repo }}
         COMMIT_MESSAGE: ${{ inputs.commit-message }}
         TEMP_CONTENTS_DIR: ${{ steps.additions-and-deletions.outputs.contents_dir }}
+
+# Reset the remote url to what was set before calling the action
+    - name: Reset remote url
+      id: reset-git-auth
+      shell: bash
+      run: |
+       git remote set-url origin "${REMOTE_URL}"
+      env:
+       REMOTE_URL: ${{ steps.commit-context.outputs.remote-url }}
