@@ -766,3 +766,112 @@ jobs:
           git push --force --delete origin "${TO_DELETE}"
         env:
           TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
+  test-persist-credentials-false-branch-on-remote:
+    runs-on: ubuntu-latest
+    needs: [check-not-fork]
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Setup test branch
+        id: setup-test-branch
+        run: |
+          BRANCH_NAME="test-creds-false-branch-on-remote-$(date +%s)"
+
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+          git checkout -b $BRANCH_NAME
+          git push --set-upstream https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git $BRANCH_NAME
+
+          # output status here to manually verify file changes
+          git status --porcelain=v2 --branch --untracked-files=no
+
+          echo $BRANCH_NAME > "test-file.txt"
+          echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+      - uses: ./
+        id: test-action
+        continue-on-error: true
+        with:
+          token: ${{ github.token }}
+          stage-all-files: true
+          commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Delete test branch
+        if: ${{ always() }}
+        run: |
+          git push --force --delete https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git "${TO_DELETE}"
+        env:
+          TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Check output
+        run: |
+          changedFilesIfAvailable=$(echo ${RESPONSE} | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+
+          if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
+            echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
+            exit 1
+          fi
+
+          if [[ "$changedFilesIfAvailable" -ne 1 ]]; then
+            echo "Error: changedFilesIfAvailable is expected to be 1 but got $changedFilesIfAvailable."
+            exit 1
+          fi
+
+          echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
+        env:
+          RESPONSE: ${{ steps.test-action.outputs.commit-response }}
+
+  test-persist-credentials-false-branch-not-on-remote: # make sure the action works on a clean machine without building
+    runs-on: ubuntu-latest
+    needs: [check-not-fork]
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Setup test branch
+        id: setup-test-branch
+        run: |
+          BRANCH_NAME="test-creds-false-branch-not-on-remote-$(date +%s)"
+          
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          
+          git checkout -b $BRANCH_NAME
+          
+          git status --porcelain=v2 --branch --untracked-files=no
+          
+          echo $BRANCH_NAME > "test-file.txt"
+          echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+      - uses: ./
+        id: test-action
+        with:
+          token: ${{ github.token }}
+          stage-all-files: true
+          create-branch-on-remote: true
+          commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Delete test branch
+        if: ${{ always() }}
+        run: |
+          git push --force --delete https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git "${TO_DELETE}"
+        env:
+          TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Check output
+        run: |
+          changedFilesIfAvailable=$(echo ${RESPONSE} | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+
+          if [[ -z "$changedFilesIfAvailable" || "$changedFilesIfAvailable" == "null" ]]; then
+            echo "Error: changedFilesIfAvailable is empty or null. Verify the output from test-action."
+            exit 1
+          fi
+
+          if [[ "$changedFilesIfAvailable" -ne 1 ]]; then
+            echo "Error: changedFilesIfAvailable is expected to be 1 but got $changedFilesIfAvailable."
+            exit 1
+          fi
+
+          echo "Validation passed: changedFilesIfAvailable is $changedFilesIfAvailable."
+        env:
+          RESPONSE: ${{ steps.test-action.outputs.commit-response }}
