@@ -50,14 +50,14 @@ runs:
         fi
 
 # Make sure input token is used for remote git operations
-    - name: Inject token into remote url
-      id: config-git-auth
-      shell: bash
-      run: |
-        git remote set-url origin https://x-access-token:${TOKEN}@github.com/${REPO}
-      env:
-        REPO: ${{ steps.commit-context.outputs.repo }}
-        TOKEN: ${{ inputs.token }}
+#    - name: Inject token into remote url
+#      id: config-git-auth
+#      shell: bash
+#      run: |
+#        git remote set-url origin https://x-access-token:${TOKEN}@github.com/${REPO}
+#      env:
+#        REPO: ${{ steps.commit-context.outputs.repo }}
+#        TOKEN: ${{ inputs.token }}
 
     - name: Stage all files
       if: inputs.stage-all-files == 'true'
@@ -68,12 +68,14 @@ runs:
       if: inputs.create-branch-on-remote == 'true'
       shell: bash
       run: |
-        onRemote=$(git ls-remote --heads origin ${BRANCH})
+        onRemote=$(git ls-remote --heads https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git ${BRANCH})
         if [[ -z "$onRemote" ]]; then
           git push --set-upstream origin ${BRANCH}
         fi
       env:
         BRANCH: ${{ steps.commit-context.outputs.branch }}
+        REPO: ${{ steps.commit-context.outputs.repo }}
+        GH_TOKEN: ${{ inputs.token }}
 
     - name: Get file additions and deletions
       id: additions-and-deletions
@@ -168,12 +170,12 @@ runs:
       shell: bash
       id: commit-changes
       run: |
-        branch_oid=$(git ls-remote origin refs/heads/${BRANCH} | awk '{ print $1 }')
+        branch_oid=$(git ls-remote https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git refs/heads/${BRANCH} | awk '{ print $1 }')
         
         if [ -n "$branch_oid" ]; then
           head_oid=$branch_oid # Use remote OID of the current branch
         else
-          head_oid=$(git ls-remote origin HEAD | awk '{ print $1 }') # Fallback to HEAD
+          head_oid=$(git ls-remote https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git HEAD | awk '{ print $1 }') # Fallback to HEAD
         fi
   
         graphql_query='mutation(
@@ -217,11 +219,11 @@ runs:
         TEMP_CONTENTS_DIR: ${{ steps.additions-and-deletions.outputs.contents_dir }}
 
 # Reset the remote url to what was set before calling the action
-    - name: Reset remote url
-      id: reset-git-auth
-      shell: bash
-      run: |
-        echo "${REMOTE}"
-        git remote set-url origin ${{ steps.commit-context.outputs.remote }}
-      env:
-        REMOTE: ${{ steps.commit-context.outputs.remote }}
+#    - name: Reset remote url
+#      id: reset-git-auth
+#      shell: bash
+#      run: |
+#        echo "${REMOTE}"
+#        git remote set-url origin ${{ steps.commit-context.outputs.remote }}
+#      env:
+#        REMOTE: ${{ steps.commit-context.outputs.remote }}
