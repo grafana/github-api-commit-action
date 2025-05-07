@@ -41,7 +41,7 @@ runs:
           OWNER=${BASH_REMATCH[2]}
           REPO=${BASH_REMATCH[3]}
           BRANCH=$(git branch --show-current)
-          echo "remote-url=$REMOTE_URL" >> GITHUB_OUTPUT
+          echo "remote=$REMOTE_URL" >> GITHUB_OUTPUT
           echo "repo=$OWNER/$REPO" >> $GITHUB_OUTPUT
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
         else
@@ -221,6 +221,7 @@ runs:
       id: reset-git-auth
       shell: bash
       run: |
-       git remote set-url origin "${REMOTE_URL}"
+        echo "${REMOTE}"
+        git remote set-url origin ${{ steps.commit-context.outputs.remote }}
       env:
-       REMOTE_URL: ${{ steps.commit-context.outputs.remote-url }}
+        REMOTE: ${{ steps.commit-context.outputs.remote }}
