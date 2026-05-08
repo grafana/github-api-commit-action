@@ -766,6 +766,80 @@ jobs:
           git push --force --delete origin "${TO_DELETE}"
         env:
           TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
+
+  test-allow-empty: # verify allow-empty: true creates a commit even when there are no file changes
+    runs-on: ubuntu-latest
+    needs: [check-not-fork]
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: true
+      - name: Setup test branch
+        id: setup-test-branch
+        run: |
+          BRANCH_NAME="test_allow-empty-$(date +%s)"
+
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+          git checkout -b $BRANCH_NAME
+          git push --set-upstream origin $BRANCH_NAME
+
+          # output status here to manually verify there are no file changes
+          git status --porcelain=v2 --branch --untracked-files=no
+
+          PARENT_SHA=$(git rev-parse HEAD)
+          echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "parent-sha=$PARENT_SHA" >> $GITHUB_OUTPUT
+      - uses: ./
+        id: test-action
+        with:
+          token: ${{ github.token }}
+          allow-empty: true
+          commit-message: ${{ steps.setup-test-branch.outputs.branch-name }}
+      - name: Validate empty commit was created
+        run: |
+          if [[ -z "${RESPONSE}" ]]; then
+            echo "Error: commit-response is empty; expected a commit to be created."
+            exit 1
+          fi
+
+          changedFilesIfAvailable=$(echo "${RESPONSE}" | jq -r '.data.createCommitOnBranch.commit.changedFilesIfAvailable')
+          if [[ "$changedFilesIfAvailable" -ne 0 ]]; then
+            echo "Error: changedFilesIfAvailable expected 0 but got $changedFilesIfAvailable."
+            exit 1
+          fi
+
+          # Fetch the branch from the remote and confirm the commit is truly empty
+          # (its tree SHA equals its parent's tree SHA) and that HEAD advanced.
+          git fetch origin "${BRANCH}"
+          NEW_HEAD=$(git rev-parse "origin/${BRANCH}")
+          if [[ "$NEW_HEAD" == "${PARENT_SHA}" ]]; then
+            echo "Error: branch HEAD did not advance; no commit was created."
+            exit 1
+          fi
+
+          NEW_TREE=$(git rev-parse "origin/${BRANCH}^{tree}")
+          PARENT_TREE=$(git rev-parse "origin/${BRANCH}~^{tree}")
+          if [[ "$NEW_TREE" != "$PARENT_TREE" ]]; then
+            echo "Error: new commit tree ($NEW_TREE) differs from parent tree ($PARENT_TREE); commit is not empty."
+            exit 1
+          fi
+
+          echo "Validation passed: empty commit created on top of ${PARENT_SHA}."
+        env:
+          RESPONSE: ${{ steps.test-action.outputs.commit-response }}
+          BRANCH: ${{ steps.setup-test-branch.outputs.branch-name }}
+          PARENT_SHA: ${{ steps.setup-test-branch.outputs.parent-sha }}
+      - name: Delete test branch
+        if: ${{ always() }}
+        run: |
+          git push --force --delete origin "${TO_DELETE}"
+        env:
+          TO_DELETE: ${{ steps.setup-test-branch.outputs.branch-name }}
+
   test-persist-credentials-false-branch-on-remote:
     runs-on: ubuntu-latest
     needs: [check-not-fork]
