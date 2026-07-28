@@ -22,18 +22,19 @@ instance, if you create a branch via `git checkout -b my-test-branch` in one of 
       commit-message: "<commit-message>" # Commit message defaults to "Commit performed by grafana/github-api-commit-action"
       create-branch-on-remote: true | false # Whether to create the branch on the remote if it doesn't exist: Defaults to false
       stage-all-files: true | false # Whether to additionally stage any changed files in the checkout. Defaults to false
+      allow-empty: true | false # Whether to create an empty commit when there are no changes (supersedes success-if-no-changes). Defaults to false
+      success-if-no-changes: true | false # Whether to return success if no changes are detected. Has no effect when allow-empty is true. Defaults to false
       token: ${{ github.token }} # Token you want to authenticate with
 ```
 
 ### Example: Using a GitHub App Installation Token
 
 ```yaml
-  - uses: tibdex/github-app-token@v1
+  - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
     id: get_installation_token
     with:
-      app_id: ${{ secrets.GITHUB_APP_ID }}
-      installation_id: ${{ secrets.GITHUB_APP_INSTALLATION_ID }}
-      private_key: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
+      client-id: ${{ vars.GITHUB_APP_CLIENT_ID }}
+      private-key: ${{ vars.GITHUB_APP_PRIVATE_KEY }}
 
   - name: Commit changes
     uses: grafana/github-api-commit-action@$TAG_HASH # $TAG
@@ -41,6 +42,8 @@ instance, if you create a branch via `git checkout -b my-test-branch` in one of 
       commit-message: "<commit-message>" # Commit message defaults to "Commit performed by grafana/github-api-commit-action"
       create-branch-on-remote: true | false # Whether to create the branch on the remote if it doesn't exist already: Defaults to false
       stage-all-files: true | false # Whether to additionally stage any changed files in the checkout. Defaults to false
+      allow-empty: true | false # Whether to create an empty commit when there are no changes (supersedes success-if-no-changes). Defaults to false
+      success-if-no-changes: true | false # Whether to return success if no changes are detected. Has no effect when allow-empty is true. Defaults to false
       token: ${{ steps.get_installation_token.outputs.token }} # Token you want to authenticate with
 ```
 

@@ -16,7 +16,11 @@ inputs:
     default: 'false'
   success-if-no-changes:
     required: true
-    description: 'Whether to return success if no changes are detected: true/false'
+    description: 'Whether to return success if no changes are detected. Has no effect when allow-empty is true: true/false'
+    default: 'false'
+  allow-empty:
+    required: true
+    description: 'Whether to create an empty commit when there are no changes (supersedes success-if-no-changes): true/false'
     default: 'false'
   token:
     required: true
@@ -129,13 +133,17 @@ runs:
         done
         
         if [[ "$additions" == "" && "$deletions" == "" ]]; then
-          echo "No changes to commit"
-          echo "any_changed=false"  >> $GITHUB_OUTPUT
-
-          if [[ "${SUCCESS_IF_NO_CHANGES}" == "true" ]]; then
-            exit 0
+          if [[ "${ALLOW_EMPTY}" == "true" ]]; then
+            echo "No changes detected; creating an empty commit (allow-empty=true)"
           else
-            exit 1
+            echo "No changes to commit"
+            echo "any_changed=false"  >> $GITHUB_OUTPUT
+
+            if [[ "${SUCCESS_IF_NO_CHANGES}" == "true" ]]; then
+              exit 0
+            else
+              exit 1
+            fi
           fi
         fi
         
@@ -153,6 +161,7 @@ runs:
         echo "deletions=$deletions" >> $GITHUB_OUTPUT
       env:
         SUCCESS_IF_NO_CHANGES: ${{ inputs.success-if-no-changes }}
+        ALLOW_EMPTY: ${{ inputs.allow-empty }}
 
     - name: Commit changes
       if: ${{ steps.additions-and-deletions.outputs.any_changed == 'true' }}
